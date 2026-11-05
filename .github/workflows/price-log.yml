@@ -1,0 +1,42 @@
+name: Weekly GPU price log
+
+on:
+  schedule:
+    # Every Monday at 09:00 UTC
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  log-prices:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install project
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run API price collectors
+        run: python scripts/log_prices.py
+
+      - name: Commit updated price log
+        run: |
+          git config user.name "price-log-bot"
+          git config user.email "price-log-bot@users.noreply.github.com"
+          git add data/prices/prices.parquet
+          if git diff --cached --quiet; then
+            echo "No new price rows this week."
+          else
+            git commit -m "[price-log] Weekly auto-append $(date -u +%Y-%m-%d)"
+            git push
+          fi

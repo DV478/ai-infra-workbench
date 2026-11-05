@@ -1,0 +1,5 @@
+Nebius launches H200 clusters at $3.49 per GPU-hour
+
+Nebius Group announced general availability of H200 SXM 141GB clusters across its Finland and New Jersey regions. On-demand pricing is $3.49 per GPU-hour; 1-year reserved contracts start at $2.19 per GPU-hour. The company said it has taken delivery of 15,000 H200 units in Q3-2026 and plans an additional 40,000 units across Q4-2026 and Q1-2027.
+
+Nebius plans to open a second Finland site in Mäntsälä by mid-2027, adding 60 MW of IT capacity. Total capex for the 2026-2027 build-out is $1.2 billion, funded from the H2-2025 equity placement.

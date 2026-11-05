@@ -1,0 +1,5 @@
+Nscale commits $2.5 billion to Glasgow AI datacenter
+
+Nscale announced today that it has committed $2.5 billion to build a new AI datacenter in Glasgow, Scotland. The facility will reach 300 MW of IT load by the end of 2027 and will host 50,000 Nvidia H100 SXM5 GPUs under a multi-year supply deal with Nvidia. Nscale said hourly on-demand pricing for H100 SXM5 instances starts at $2.49 per GPU-hour, with reserved-year rates available by request.
+
+The site represents the UK's largest AI compute commitment announced in 2026. First racks are scheduled to go live in Q3 2027, with full capacity by December 2027. Nscale CEO Josh Payne said the Glasgow build is "step one of a 1 GW UK footprint by 2029."
