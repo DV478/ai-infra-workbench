@@ -151,6 +151,36 @@ Then visit the Market Intel page in the Streamlit app — it reads
 
 ---
 
+## Deploying to Streamlit Community Cloud
+
+The repo is wired for a one-click deploy.
+
+1. Sign in at https://share.streamlit.io with your GitHub account.
+2. Click **New app**.
+3. Fill in:
+   - **Repository**: `DV478/ai-infra-workbench`
+   - **Branch**: `main`
+   - **Main file path**: `build1_inference_calculator/app.py`
+   - **App URL** (optional): a custom subdomain
+4. Click **Advanced settings → Secrets** and paste:
+   ```toml
+   ANTHROPIC_API_KEY = "sk-ant-..."
+   ```
+   The compute advisor and market-intel live extraction both read this env var. Without it, those pages fall back to the no-spend UI (tool explorer / rule-based extractor).
+5. Click **Deploy**.
+
+The app installs from `requirements.txt` (the pyproject.toml is used only for local dev). Each page has a `sys.path` shim at the top that makes `from core.X import ...` resolve even if the editable install step is skipped.
+
+**Memory budget sanity check:** the free tier is 1 GB. This app loads:
+- 17-GPU YAML catalog (~50 KB)
+- 148-row `sources.duckdb` (~100 KB)
+- `prices.parquet` (grows ~5 KB/week — fine for years)
+- Optional `market_intel.duckdb` (grows with the number of docs you process; ~1 KB/fact)
+
+Total runtime usage under load (Streamlit + pandas + plotly + duckdb) is ~400-500 MB, well under 1 GB.
+
+---
+
 ## Next steps — owner action items (blocked on you, not Claude)
 
 Ordered by criticality. Items 1 and 2 are the biggest exposures.
@@ -198,9 +228,9 @@ Ordered by criticality. Items 1 and 2 are the biggest exposures.
 ## Week 3 remaining (next Claude session)
 
 Priority order:
-1. **Hosted Streamlit Community Cloud deploy.** `requirements.txt` or `pyproject.toml` compat check; secrets setup for `ANTHROPIC_API_KEY`; memory budget check for 148 source rows + parquet files + market_intel DuckDB.
-2. **Extend eval set** once the live eval reveals weaknesses — expect `SYSTEM_PROMPT` tuning when real traces come back.
-3. **Market intel live eval.** Drop 5-10 real earnings transcripts or press releases in `data/raw/market/`, run the extractor with a live `ANTHROPIC_API_KEY`, check that the quote-verification layer isn't silently dropping valid facts.
+1. **Extend eval set** once the live eval reveals weaknesses — expect `SYSTEM_PROMPT` tuning when real traces come back.
+2. **Market intel live eval.** Drop 5-10 real earnings transcripts or press releases in `data/raw/market/`, run the extractor with a live `ANTHROPIC_API_KEY`, check that the quote-verification layer isn't silently dropping valid facts.
+3. **Hosted Streamlit Cloud deploy — owner click.** Follow the Deploy section above.
 
 Done in Week 3 so far (do not redo):
 - Compute advisor agent + 10 tool wrappers

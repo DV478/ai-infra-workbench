@@ -12,14 +12,19 @@ To populate, drop text files into ``data/raw/market/`` and run:
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
-import pandas as pd
-import streamlit as st
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
 
-from core.market_intel import FactKind, MarketIntelStore
+import pandas as pd  # noqa: E402
+import streamlit as st  # noqa: E402
 
-ROOT = Path(__file__).resolve().parent.parent.parent
+from core.market_intel import FactKind, MarketIntelStore  # noqa: E402
+
+ROOT = _REPO_ROOT
 STORE_PATH = ROOT / "data" / "market_intel.duckdb"
 
 st.set_page_config(page_title="Market Intel", page_icon="📊", layout="wide")

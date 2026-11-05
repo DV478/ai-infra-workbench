@@ -6,7 +6,18 @@ sidebar automatically.
 
 from __future__ import annotations
 
-import streamlit as st
+# Streamlit Cloud entry-point shim: ensure the repo root is on sys.path so
+# ``from core.X import ...`` resolves even if the editable install from
+# requirements.txt (``-e .``) silently fails. Harmless locally (duplicate
+# entries get deduped).
+import sys
+from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+import streamlit as st  # noqa: E402
 
 st.set_page_config(
     page_title="AI Compute Economics — Build 1",

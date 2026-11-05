@@ -9,18 +9,23 @@ Three panels:
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
-import pandas as pd
-import plotly.graph_objects as go
-import streamlit as st
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
 
-from core.cost_engine.kv_cache import LLAMA3_8B, LLAMA3_70B, TINYLLAMA_1_1B
-from core.cost_engine.roofline import decode_tps, roofline_tflops
-from core.gpu_specs import load_catalog
-from core.mlperf import cross_check, load_bundled_results
+import pandas as pd  # noqa: E402
+import plotly.graph_objects as go  # noqa: E402
+import streamlit as st  # noqa: E402
 
-ROOT = Path(__file__).resolve().parent.parent.parent
+from core.cost_engine.kv_cache import LLAMA3_8B, LLAMA3_70B, TINYLLAMA_1_1B  # noqa: E402
+from core.cost_engine.roofline import decode_tps, roofline_tflops  # noqa: E402
+from core.gpu_specs import load_catalog  # noqa: E402
+from core.mlperf import cross_check, load_bundled_results  # noqa: E402
+
+ROOT = _REPO_ROOT
 T4_SMOKE_PATH = ROOT / "data" / "processed" / "t4_smoke_test.json"
 T4_SWEEP_PATH = ROOT / "data" / "processed" / "t4_validation.parquet"
 

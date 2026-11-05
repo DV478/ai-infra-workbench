@@ -2,14 +2,21 @@
 
 from __future__ import annotations
 
-import pandas as pd
-import plotly.graph_objects as go
-import streamlit as st
+import sys
+from pathlib import Path
 
-from core.cost_engine.kv_cache import LLAMA3_8B, LLAMA3_70B, QWEN2_5_3B
-from core.cost_engine.tco import OwnedEconomics, compare_options, demand_stress
-from core.gpu_specs import load_catalog
-from core.memo import render_memo
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+import pandas as pd  # noqa: E402
+import plotly.graph_objects as go  # noqa: E402
+import streamlit as st  # noqa: E402
+
+from core.cost_engine.kv_cache import LLAMA3_8B, LLAMA3_70B, QWEN2_5_3B  # noqa: E402
+from core.cost_engine.tco import OwnedEconomics, compare_options, demand_stress  # noqa: E402
+from core.gpu_specs import load_catalog  # noqa: E402
+from core.memo import render_memo  # noqa: E402
 
 st.title("TCO — build vs rent vs API")
 

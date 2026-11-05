@@ -1,0 +1,25 @@
+# Runtime dependencies for Streamlit Community Cloud deploy.
+# Mirrors the [project.dependencies] block in pyproject.toml.
+# Keep in sync — if you add a dep to pyproject.toml, add it here too.
+#
+# Why requirements.txt and pyproject.toml both exist:
+# - pyproject.toml is the source of truth for local dev (`pip install -e ".[dev]"`).
+# - Streamlit Community Cloud is more reliable detecting requirements.txt than
+#   pyproject.toml with a hatchling build-system. Belt and braces.
+
+pydantic>=2.6
+duckdb>=0.10
+pyyaml>=6.0
+pandas>=2.2
+numpy>=1.26
+httpx>=0.27
+python-ulid>=2.2
+streamlit>=1.35
+plotly>=5.20
+anthropic>=0.40
+
+# Install this repo as an editable package so `from core.X import ...` resolves
+# on Streamlit Cloud. Without this, pages would need sys.path shims.
+# The pyproject.toml ``[tool.hatch.build.targets.wheel] packages = ["core"]``
+# block is what makes this work.
+-e .

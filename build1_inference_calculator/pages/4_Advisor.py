@@ -12,10 +12,21 @@ from __future__ import annotations
 
 import json
 import os
+import sys
+from pathlib import Path
 
-import streamlit as st
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
 
-from core.agents.compute_advisor import TOOL_REGISTRY, TOOL_SCHEMAS, ComputeAdvisor, run_tool
+import streamlit as st  # noqa: E402
+
+from core.agents.compute_advisor import (  # noqa: E402
+    TOOL_REGISTRY,
+    TOOL_SCHEMAS,
+    ComputeAdvisor,
+    run_tool,
+)
 
 st.set_page_config(page_title="Compute Advisor", page_icon="🛠️", layout="wide")
 st.title("Compute advisor")
