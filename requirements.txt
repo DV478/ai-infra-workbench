@@ -17,6 +17,7 @@ python-ulid>=2.2
 streamlit>=1.35
 plotly>=5.20
 anthropic>=0.40
+openai>=1.40
 
 # Install this repo as an editable package so `from core.X import ...` resolves
 # on Streamlit Cloud. Without this, pages would need sys.path shims.

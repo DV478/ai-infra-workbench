@@ -17,6 +17,28 @@ from core.market_intel import (
     MarketIntelStore,
     extract_facts,
 )
+from core.market_intel.extractor import detect_backend
+
+# ---------- Backend detection (dual-backend prep) --------------------------
+
+
+def test_detect_backend_anthropic():
+    assert detect_backend("sk-ant-api03-xxxx") == "anthropic"
+
+
+def test_detect_backend_openai():
+    assert detect_backend("sk-proj-xxxx") == "openai"
+    assert detect_backend("sk-xxxxx") == "openai"
+
+
+def test_detect_backend_rejects_unknown():
+    with pytest.raises(ValueError, match="Unrecognised"):
+        detect_backend("garbage-key")
+
+
+def test_detect_backend_rejects_empty():
+    with pytest.raises(ValueError, match="Empty"):
+        detect_backend("")
 
 # ---------- Fixtures --------------------------------------------------------
 

@@ -21,6 +21,26 @@ from typing import Any, Protocol
 from core.market_intel.schema import FactKind, MarketIntelDoc, MarketIntelFact
 
 DEFAULT_MODEL = "claude-haiku-4-5-20251001"
+DEFAULT_OPENAI_MODEL = "gpt-4o-mini"
+
+
+def detect_backend(api_key: str) -> str:
+    """Return ``'anthropic'`` or ``'openai'`` from an API-key prefix.
+
+    Anthropic keys start with ``sk-ant-``, OpenAI with ``sk-``. Raises
+    on anything else so an unknown key fails loudly rather than silently
+    picking a wrong backend.
+    """
+    if not api_key:
+        raise ValueError("Empty API key")
+    if api_key.startswith("sk-ant-"):
+        return "anthropic"
+    if api_key.startswith("sk-"):
+        return "openai"
+    raise ValueError(
+        f"Unrecognised API key prefix {api_key[:7]!r}. "
+        "Expected 'sk-ant-*' (Anthropic) or 'sk-*' (OpenAI)."
+    )
 
 
 # ---------------------------------------------------------------------------
