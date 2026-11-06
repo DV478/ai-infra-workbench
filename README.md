@@ -8,14 +8,16 @@ See [AI_INFRA_PROJECT.md](AI_INFRA_PROJECT.md) for the full spec.
 
 ## Status
 
-**As of 2026-11-05 (Week 1 + Week 2 + Week 3 agent + market intel extractor built, before first commit):** scaffold, cost engine, MLPerf ingestion, sources seed, Streamlit multi-page app for Build 1 (5 pages), four Kaggle-ready notebooks, compute-advisor agent, eval harness, MCP server, memo generator, and market intelligence extractor are in place. Nothing is committed yet.
+**As of 2026-11-06 — Week 1-3 workbench + dual LLM backend + expanded corpus/gold-set all pushed to `main`.** Latest commit `ecd9cbf`. Deploy live at [ai-infra-workbench.streamlit.app](https://ai-infra-workbench.streamlit.app).
 
-- **107/107 tests pass** (23 W1 + 39 W2 + 27 W3 agent + 4 memo + 14 market intel)
+- **135/135 tests pass** (23 W1 + 39 W2 + 27 W3 agent + 4 memo + 24 market intel + 14 market-intel eval + 4 dual-backend)
 - Ruff clean on `core/`, `scripts/`, `tests/`, `build1_inference_calculator/`
-- `python -m core.sources.seed` runs: 17 GPUs → 148 Source rows at `data/sources.duckdb`
-- `python scripts/run_market_intel.py --fake --dry-run` extracts 11 facts from the 2 shipped sample docs with zero API spend
-- Perfect-stub eval harness run: 100% pass (20/20); numeric-in-range 93.3%
-- Vast.ai live price API confirmed working (Week 1)
+- Dual LLM backend: `ANTHROPIC_API_KEY` accepts either `sk-ant-*` (Anthropic/Haiku 4.5) or `sk-*` (OpenAI/gpt-4o-mini); backend auto-picked from key prefix. Works in Streamlit app, scripts, and MCP server.
+- Market-intel demo corpus: 8 sample docs across 4 doc types (press release, earnings transcript, investor day, news) covering CoreWeave, Nscale, Nebius, Lambda, Crusoe, Nvidia, Together. All marked `[SYNTHETIC — demo corpus]` inline.
+- Market-intel gold eval set: 12 cases (up from 8) covering every fact kind + guardrails (API-pricing-isn't-gpu-price, distractors, hedges, roadmap-only).
+- `python scripts/run_market_intel.py --fake` extracts **40 facts across 8 docs** to `data/market_intel.duckdb` with zero API spend.
+- `python scripts/run_market_intel_eval.py --fake` — baseline 4/12 pass (33%), quote-valid 100%. Rule-based fake can't handle contracts/roadmaps; real-LLM run (owner, pending) should jump substantially.
+- Vast.ai live price API confirmed working (Week 1).
 
 ---
 
@@ -188,33 +190,35 @@ Total runtime usage under load (Streamlit + pandas + plotly + duckdb) is ~400-50
 
 ## Next steps — owner action items (blocked on you, not Claude)
 
-Ordered by criticality. Items 1 and 2 are the biggest exposures.
+Ordered by what unlocks most downstream work.
 
-1. **First git commit + GitHub push.** Repo has zero commits. If the machine dies, all code is lost.
-   ```powershell
-   git add .
-   git commit -m "Week 1-3 scaffold: cost engine, agent, Streamlit app"
-   git remote add origin <your empty GitHub repo URL>
-   git push -u origin main
-   ```
+1. ~~**First git commit + GitHub push.**~~ ✅ Done 2026-11-05 — repo at https://github.com/DV478/ai-infra-workbench.
 
-2. **Enable the price-log workflow** on GitHub after push. First real log fires **Monday 2026-11-09 09:00 UTC**. Price history only exists from the week logging starts. If push slips past Monday, trigger manually via Actions → "Run workflow".
+2. **Enable the price-log workflow** on GitHub. Visit `https://github.com/DV478/ai-infra-workbench/actions` and approve workflows if GitHub prompts. First log fires Mondays 09:00 UTC.
 
-3. **Run `00_t4_smoke_test.ipynb` on Kaggle T4** → commit `data/processed/t4_smoke_test.json`. First measured number in the project.
+3. **Run `00_t4_smoke_test.ipynb` on Kaggle T4** → commit `data/processed/t4_smoke_test.json`. First measured number.
 
-4. **Run `03_vllm_t4_validation.ipynb` on Kaggle T4** (~30 min). Commit `data/processed/t4_validation.parquet`. The Streamlit Validation page auto-renders predicted-vs-measured scatter + mean absolute error once this file lands. Calibrates `utilisation_frac`.
+4. **Run `03_vllm_t4_validation.ipynb` on Kaggle T4** (~30 min). Commit `data/processed/t4_validation.parquet`. Calibrates `utilisation_frac`; the Validation page auto-renders predicted-vs-measured scatter once this file lands.
 
 5. **Drop MLPerf CSVs** into `data/raw/mlperf/` named `<round>__<label>.csv` (e.g. `v5.0__datacenter.csv`) from https://mlcommons.org/en/inference-datacenter-50/. Validation page auto-reads them.
 
-6. **Live advisor eval** once you have an API key (Anthropic or OpenAI):
+6. **Live advisor eval** (`ANTHROPIC_API_KEY` accepts either prefix):
    ```powershell
    $env:ANTHROPIC_API_KEY = "<sk-ant-... or sk-...>"
    python scripts/run_eval.py --limit 5    # smoke
    python scripts/run_eval.py              # full → eval_report.md
    ```
-   Record pass rate in README. If <70%, tune `SYSTEM_PROMPT` in `core/agents/compute_advisor.py`.
+   Record pass rate. If <70%, tune `SYSTEM_PROMPT` in [core/agents/compute_advisor.py](core/agents/compute_advisor.py).
 
-7. **MCP server smoke test** in Claude Desktop (optional; unlocks the zero-API-spend path):
+7. **Live market-intel eval** against the expanded 12-case gold set:
+   ```powershell
+   $env:ANTHROPIC_API_KEY = "<sk-ant-... or sk-...>"
+   python scripts/run_market_intel_eval.py --limit 3   # smoke
+   python scripts/run_market_intel_eval.py             # full → market_intel_eval_report.md
+   ```
+   Baseline on `--fake` is 4/12 (33%), quote-valid 100%. Real-LLM run should jump substantially.
+
+8. **MCP server smoke test** in Claude Desktop (optional; zero-API-spend path):
    ```powershell
    pip install "mcp>=1.0"
    # add the config block from scripts/mcp_advisor_server.py docstring to claude_desktop_config.json
@@ -226,15 +230,16 @@ Ordered by criticality. Items 1 and 2 are the biggest exposures.
 - If measured T4 TPS falls outside `test_tinyllama_decode_t4_sanity`'s 60-150 band ([tests/test_cost_engine.py](tests/test_cost_engine.py)), recalibrate `utilisation_frac` in [core/cost_engine/roofline.py](core/cost_engine/roofline.py). W2 notebooks assume 0.55 for T4; W1 catalog defaults to 0.65 (H100). Reconcile once Kaggle runs land.
 - Blackwell is `confidence: medium`, Rubin is `low`. The sources seed script maps these to `MODELLED` (not `MEASURED`) so UI badges stay honest.
 - MLPerf `_predict` map in [pages/2_Validation.py](build1_inference_calculator/pages/2_Validation.py) only knows Llama-2/3 70B. Extend for Mixtral and GPT-J-6B when their CSVs arrive.
-- **No commits yet.** This is still the biggest single exposure.
+- Live Streamlit's Market Intel page shows an empty-state because `data/market_intel.duckdb` is gitignored. Non-blocking (the page handles this gracefully with a clear message), but if the demo viewer should see the 40-fact table out-of-the-box, add a cold-start auto-populate hack that runs the `--fake` extractor over the committed `data/raw/market/` docs on first page load.
 
 ---
 
-## Week 3 remaining (next Claude session)
+## Next Claude-doable work (pick up here next session)
 
-Priority order:
-1. **Extend eval set** once the live eval reveals weaknesses — expect `SYSTEM_PROMPT` tuning when real traces come back.
-2. **Market intel live eval.** Drop 5-10 real earnings transcripts or press releases in `data/raw/market/`, run the extractor with a live `ANTHROPIC_API_KEY`, check that the quote-verification layer isn't silently dropping valid facts.
+Priority order (all three are independent — do in any order):
+1. **Extend compute-advisor eval set** (currently 20 Qs) with adversarial / multi-tool / guardrail questions. High value if the owner runs the live eval first and surfaces specific weaknesses.
+2. **Fix MLPerf `_predict`** in [pages/2_Validation.py](build1_inference_calculator/pages/2_Validation.py) for Mixtral + GPT-J-6B so the Validation page is useful when more CSVs land.
+3. **Market-intel Streamlit cold-start auto-populate** — small QoL fix so the live demo page shows the 40-fact table out of the box.
 3. **Hosted Streamlit Cloud deploy — owner click.** Follow the Deploy section above.
 
 Done in Week 3 so far (do not redo):
