@@ -35,6 +35,10 @@ data/traces/*
 # Generated market-intel DB — regenerate with scripts/run_market_intel.py
 data/market_intel.duckdb
 
+# Generated eval reports — regenerate with scripts/run_eval.py / run_market_intel_eval.py
+eval_report.md
+market_intel_eval_report.md
+
 # Env
 .env
 .env.local

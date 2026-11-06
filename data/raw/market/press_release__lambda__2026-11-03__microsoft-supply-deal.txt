@@ -1,0 +1,11 @@
+Lambda signs $1.1 billion multi-year compute supply deal with Microsoft
+
+[SYNTHETIC — demo corpus for AI compute workbench; not a real press release]
+
+Lambda today announced the execution of a $1.1 billion three-year compute supply agreement with Microsoft Corporation. Under the terms of the agreement, Lambda will deliver dedicated capacity consisting of approximately 18,000 Nvidia H200 SXM GPUs and 6,000 Blackwell B200 GPUs, with delivery staggered from Q1 2027 through Q4 2029.
+
+The agreement includes volume discounts and a take-or-pay structure. Lambda retains the right to resell unused reserved capacity to third parties through its on-demand marketplace. A Lambda spokesperson said the deal represents the company's largest single-customer commitment to date.
+
+Lambda's current public on-demand rate for H200 SXM 141GB instances is $3.29 per GPU-hour; reserved customers under this agreement will see materially discounted rates not disclosed publicly.
+
+Lambda disclosed that the Microsoft capacity will be served from two new facilities: a 65 MW site in Chandler, Arizona coming online in Q2 2027, and a 40 MW site in Dublin, Ireland online by Q4 2027.

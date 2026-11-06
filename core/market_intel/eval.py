@@ -338,4 +338,109 @@ GOLD_CASES: list[EvalCase] = [
         ],
         notes="Distractor numbers (2019, 42 employees, 180 by 2027) should NOT be emitted.",
     ),
+    # ---- Harder cases: longer docs, more distractors, realistic shape ----
+    EvalCase(
+        id="long-earnings-mixed",
+        doc=_doc(
+            doc_id="gold-09",
+            doc_type="earnings_transcript",
+            title="Neocloud Q3 call — H200 ramp + Blackwell allocation",
+            body=(
+                "Analyst: Could you walk through the H200 ramp this quarter and provide colour on Blackwell availability?\n\n"
+                "Finance representative: We took delivery of 32,000 H200 SXM units in Q3 2026, bringing our H200 installed base to roughly 85,000 across our North American and European fleet. "
+                "On Blackwell, we expect first racks to go live in late Q4 2026, with material revenue contribution starting Q1 2027. "
+                "We have secured allocation for approximately 25,000 Blackwell B200 units through 2027 under our existing Nvidia supply agreement.\n\n"
+                "Analyst: On capex — any update on full year 2026?\n\n"
+                "Finance representative: We are now guiding full year 2026 capex of $6.8 billion, up from the $6.2 billion communicated last quarter. "
+                "The uplift is driven by accelerated Blackwell procurement and a new 120 MW buildout at our Virginia-3 site, which begins power-on in June 2027."
+            ),
+            company="neocloudco",
+            published_date="2026-10-28",
+        ),
+        expected=[
+            ExpectedFact(FactKind.GPU_SHIPMENT, "h200", value_num=32_000, value_unit="units"),
+            ExpectedFact(FactKind.GPU_SHIPMENT, "b200", value_num=25_000, value_unit="units"),
+            ExpectedFact(FactKind.CAPEX, "neocloudco", value_num=6_800_000_000, value_unit="usd"),
+            ExpectedFact(FactKind.CAPACITY, "virginia", value_num=120, value_unit="mw"),
+        ],
+        notes=(
+            "Long conversational transcript with mixed fact kinds. Note the prior-guidance "
+            "$6.2B figure should NOT be emitted (it's a historical restated number, not a new "
+            "commitment) — but tolerated if emitted, since precision isn't a pass criterion. "
+            "Installed base 85,000 is also a distractor: it's a running total, not a Q3 shipment."
+        ),
+    ),
+    EvalCase(
+        id="big-contract-multi-shipment",
+        doc=_doc(
+            doc_id="gold-10",
+            doc_type="press_release",
+            title="Lambda signs $1.1B three-year compute deal with Microsoft",
+            body=(
+                "Lambda today announced the execution of a $1.1 billion three-year compute supply agreement with Microsoft Corporation. "
+                "Under the terms of the agreement, Lambda will deliver dedicated capacity consisting of approximately 18,000 Nvidia H200 SXM GPUs and 6,000 Blackwell B200 GPUs, "
+                "with delivery staggered from Q1 2027 through Q4 2029.\n\n"
+                "Lambda's current public on-demand rate for H200 SXM 141GB instances is $3.29 per GPU-hour; reserved customers under this agreement will see materially discounted rates not disclosed publicly."
+            ),
+            company="lambda",
+            published_date="2026-11-03",
+        ),
+        expected=[
+            ExpectedFact(FactKind.CONTRACT, "microsoft", value_num=1_100_000_000, value_unit="usd"),
+            ExpectedFact(FactKind.GPU_SHIPMENT, "h200", value_num=18_000, value_unit="units"),
+            ExpectedFact(FactKind.GPU_SHIPMENT, "b200", value_num=6_000, value_unit="units"),
+            ExpectedFact(FactKind.GPU_PRICE, "h200", value_num=3.29, value_unit="usd_per_hour"),
+        ],
+        notes="Contract + two shipments + a GPU-hour price in one doc. Tests multi-kind recall.",
+    ),
+    EvalCase(
+        id="api-pricing-guardrail",
+        doc=_doc(
+            doc_id="gold-11",
+            doc_type="news",
+            title="Together AI cuts Llama-3-70B inference price",
+            body=(
+                "Together AI announced a 40 percent price reduction on its Llama-3-70B inference API, "
+                "lowering the output token rate from $1.00 to $0.60 per million tokens effective immediately. "
+                "Input tokens drop from $0.30 to $0.18 per million. The company cited cost improvements from "
+                "its latest H200 fleet upgrade and software stack optimisations. "
+                "Some industry observers believe further rounds of price cuts are inevitable as hyperscalers bring Blackwell capacity online."
+            ),
+            company="together",
+            published_date="2026-10-20",
+        ),
+        expected=[],
+        notes=(
+            "Guardrail: API $/M-token rates are NOT gpu_price facts (gpu_price is $/hr for a GPU "
+            "or instance type). Analyst speculation about 'further price cuts' is opinion, not a "
+            "concrete commitment. Expected: zero facts emitted."
+        ),
+    ),
+    EvalCase(
+        id="roadmap-heavy-investor-day",
+        doc=_doc(
+            doc_id="gold-12",
+            doc_type="investor_day",
+            title="Nvidia Investor Day — Blackwell Ultra and Rubin update",
+            body=(
+                "Nvidia today provided an updated product roadmap:\n\n"
+                "- Blackwell B200 is in full production, with Q3 2026 shipments of approximately 420,000 units across hyperscaler and neocloud customers.\n"
+                "- Blackwell Ultra B300 is on track for general availability in Q2 2027, with initial sampling to lead customers beginning January 2027.\n"
+                "- Rubin will ship in volume in H1 2028, two quarters later than previously indicated.\n\n"
+                "Data center revenue grew 68 percent year over year. Nvidia confirmed it has booked approximately $42 billion of data center revenue in the fiscal quarter."
+            ),
+            company="nvidia",
+            published_date="2026-10-05",
+        ),
+        expected=[
+            ExpectedFact(FactKind.GPU_SHIPMENT, "b200", value_num=420_000, value_unit="units"),
+            ExpectedFact(FactKind.ROADMAP, "b300"),
+            ExpectedFact(FactKind.ROADMAP, "rubin"),
+        ],
+        notes=(
+            "Two roadmap items + one shipment aggregate. The $42B revenue figure is a reporting "
+            "number, not a capex/contract commitment — should NOT emit. Revenue growth percentage "
+            "is also not an eligible fact kind."
+        ),
+    ),
 ]

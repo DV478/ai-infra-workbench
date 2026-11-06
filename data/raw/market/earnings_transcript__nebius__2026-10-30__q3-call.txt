@@ -1,0 +1,13 @@
+Nebius Group Q3 2026 earnings call transcript (excerpt)
+
+[SYNTHETIC — demo corpus for AI compute workbench; not a real earnings call]
+
+Nebius finance representative: Thanks everyone. Q3 revenue came in at $240 million, up 118 percent year on year. We ended the quarter with 1,850 employees, up from 1,420 at the start of the year. Our data center infrastructure revenue segment grew 135 percent and now represents approximately 82 percent of total revenue.
+
+On the compute side, we took delivery of 15,000 Nvidia H200 SXM units in Q3 and have placed orders for an additional 40,000 units spanning Q4 2026 and Q1 2027. Our on-demand rate for H200 SXM 141GB remains $3.49 per GPU-hour, with 1-year reserved rates starting at $2.19 per GPU-hour. We also launched preview access to our Blackwell B200 instances at an introductory rate of $5.90 per GPU-hour.
+
+For the full year 2026 we are reiterating our capex guidance of $1.9 billion, with a Finland site expansion in Mäntsälä adding 60 MW of IT load by mid-2027.
+
+Analyst: Any colour on the B200 ramp through 2027?
+
+Nebius finance representative: We expect to take delivery of 12,000 to 15,000 B200 units across 2027, dependent on Nvidia allocation.

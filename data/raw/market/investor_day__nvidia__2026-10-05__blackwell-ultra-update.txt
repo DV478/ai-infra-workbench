@@ -1,0 +1,14 @@
+Nvidia Investor Day 2026 — Blackwell Ultra and Rubin update (excerpt)
+
+[SYNTHETIC — demo corpus for AI compute workbench; not a real investor-day transcript]
+
+Nvidia today provided an updated product roadmap at its 2026 Investor Day. Key highlights:
+
+- Blackwell B200 is in full production, with Q3 2026 shipments of approximately 420,000 units across hyperscaler and neocloud customers.
+- Blackwell Ultra B300 is on track for general availability in Q2 2027, with initial sampling to lead customers beginning January 2027.
+- Rubin will ship in volume in H1 2028, two quarters later than previously indicated.
+- Data center revenue grew 68 percent year over year, driven primarily by Hopper and Blackwell demand.
+
+A company representative noted that supply remains tight through at least Q2 2027, and that on-balance-sheet inventory is at historically normal levels. Nvidia confirmed it has booked approximately $42 billion of data center revenue in the fiscal quarter.
+
+No pricing guidance for Rubin was disclosed. Blackwell B200 list price per SXM module is in the approximately $45,000 range per prior commentary, though volume customers are understood to receive meaningful discounts.

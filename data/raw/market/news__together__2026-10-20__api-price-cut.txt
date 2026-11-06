@@ -1,0 +1,9 @@
+Together AI cuts Llama-3-70B inference price to $0.60 per million output tokens
+
+[SYNTHETIC — demo corpus for AI compute workbench; not a real news article]
+
+Together AI announced a 40 percent price reduction on its Llama-3-70B inference API, lowering the output token rate from $1.00 to $0.60 per million tokens effective immediately. Input tokens drop from $0.30 to $0.18 per million. The company cited cost improvements from its latest H200 fleet upgrade and software stack optimisations.
+
+Analysts say the move intensifies pressure on competing API providers. Some industry observers believe further rounds of price cuts are inevitable as hyperscalers bring Blackwell capacity online. Together has not disclosed its own cost base, and estimates from independent researchers suggest the company's unit economics remain healthy even at the new price point.
+
+A Together spokesperson said the company is committed to passing efficiency gains through to customers, though specific margin targets were not shared. The company serves API traffic from a mix of owned H100 and H200 clusters and reserved neocloud capacity.

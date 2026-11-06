@@ -1,0 +1,9 @@
+Crusoe announces $850 million Iceland expansion, adding 95 MW of capacity
+
+[SYNTHETIC — demo corpus for AI compute workbench; not a real press release]
+
+Crusoe Energy Systems today announced an $850 million investment to expand its Reykjanes, Iceland datacenter campus. The expansion will add 95 MW of IT load, bringing total Iceland capacity to 175 MW by end of 2028. Site works begin December 2026 with first racks online in Q3 2027.
+
+The site will initially host approximately 22,000 Nvidia H200 SXM 141GB GPUs, with follow-on capacity reserved for Blackwell Ultra B300 GPUs once available. Crusoe said the Iceland campus benefits from abundant geothermal baseload power and a low-latency subsea cable path to Northern Europe.
+
+Hourly instance pricing for H200 SXM at the Iceland campus will match Crusoe's existing US-East rate card of $2.89 per GPU-hour on-demand. The company added that reserved pricing will be announced closer to go-live.

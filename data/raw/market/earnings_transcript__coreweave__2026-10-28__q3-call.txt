@@ -1,0 +1,21 @@
+CoreWeave Q3 2026 earnings call transcript (excerpt)
+
+[SYNTHETIC — demo corpus for AI compute workbench; not a real earnings call]
+
+Operator: Our next question comes from an analyst covering infrastructure.
+
+Analyst: Thanks. Could you walk through the H200 ramp this quarter and provide any colour on Blackwell availability?
+
+CoreWeave finance representative: Sure. We took delivery of 32,000 H200 SXM units in Q3 2026, bringing our H200 installed base to roughly 85,000 across our North American and European fleet. On Blackwell, we expect first racks to go live in late Q4 2026, with material revenue contribution starting Q1 2027. We have secured allocation for approximately 25,000 Blackwell B200 units through 2027 under our existing Nvidia supply agreement.
+
+Analyst: And on capex — you mentioned $4.5 billion year to date through Q3. Any update on full year 2026?
+
+CoreWeave finance representative: We are now guiding full year 2026 capex of $6.8 billion, up from the $6.2 billion communicated last quarter. The uplift is driven by accelerated Blackwell procurement and a new 120 MW buildout at our Virginia-3 site, which begins power-on in June 2027. Hosting cost per megawatt continues to trend in line with prior disclosures.
+
+Analyst: Any update on average rate card?
+
+CoreWeave finance representative: On-demand H200 SXM 141GB remains at $3.19 per GPU-hour, with 1-year reserved contracts starting at $2.09 per GPU-hour. We have not yet published a Blackwell rate card.
+
+Analyst: Thanks.
+
+Operator: Next question comes from the line of another analyst.
