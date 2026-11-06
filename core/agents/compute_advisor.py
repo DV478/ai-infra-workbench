@@ -23,6 +23,7 @@ Design choices:
 from __future__ import annotations
 
 import json
+import os
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
@@ -49,6 +50,7 @@ from core.cost_engine.tco import (
 )
 from core.cost_engine.token_cost import cost_per_m_tokens, implied_api_margin
 from core.gpu_specs.catalog import load_catalog
+from core.market_intel.extractor import detect_backend
 
 # ---------------------------------------------------------------------------
 # Model-arch lookup. Agent passes a string name; we resolve to the arch.
@@ -561,30 +563,63 @@ class AgentResponse:
 
 
 DEFAULT_MODEL = "claude-haiku-4-5-20251001"
+DEFAULT_OPENAI_MODEL = "gpt-4o-mini"
+
+
+def _openai_tool_schemas() -> list[dict]:
+    """Translate Anthropic tool schemas to OpenAI function-tool shape."""
+    return [
+        {
+            "type": "function",
+            "function": {
+                "name": t["name"],
+                "description": t["description"],
+                "parameters": t["input_schema"],
+            },
+        }
+        for t in TOOL_SCHEMAS
+    ]
 
 
 class ComputeAdvisor:
-    """Thin wrapper around the Anthropic SDK that runs the tool loop.
+    """Thin wrapper that runs the tool loop against Anthropic or OpenAI.
 
-    Instantiate once per session so the client is reused. Pass
-    ``executor=run_tool`` (the default) in production; tests can supply
-    a custom executor to intercept tool dispatch.
+    Backend is picked from the API key prefix (``sk-ant-*`` → Anthropic,
+    ``sk-*`` → OpenAI). The owner's workflow treats ``ANTHROPIC_API_KEY``
+    as the canonical env var and may hold either key — the class resolves
+    which SDK to call. Pass ``executor=run_tool`` (default) in production;
+    tests can supply a custom executor to intercept tool dispatch.
     """
 
     def __init__(
         self,
         api_key: str | None = None,
-        model: str = DEFAULT_MODEL,
+        model: str | None = None,
         executor: Callable[[str, dict], dict] = run_tool,
         max_tool_calls: int = 8,
+        backend: str | None = None,
     ):
-        self._api_key = api_key
-        self._model = model
+        resolved_key = api_key or os.getenv("ANTHROPIC_API_KEY") or os.getenv("OPENAI_API_KEY")
+        if backend is None:
+            backend = detect_backend(resolved_key) if resolved_key else "anthropic"
+        if backend not in {"anthropic", "openai"}:
+            raise ValueError(f"Unknown backend {backend!r}")
+        self._api_key = resolved_key
+        self._backend = backend
+        self._model = model or (DEFAULT_MODEL if backend == "anthropic" else DEFAULT_OPENAI_MODEL)
         self._executor = executor
         self._max_tool_calls = max_tool_calls
         self._client = None
 
-    def _get_client(self):
+    @property
+    def backend(self) -> str:
+        return self._backend
+
+    @property
+    def model(self) -> str:
+        return self._model
+
+    def _get_anthropic_client(self):
         if self._client is None:
             try:
                 from anthropic import Anthropic
@@ -593,9 +628,23 @@ class ComputeAdvisor:
             self._client = Anthropic(api_key=self._api_key) if self._api_key else Anthropic()
         return self._client
 
+    def _get_openai_client(self):
+        if self._client is None:
+            try:
+                from openai import OpenAI
+            except ImportError as e:
+                raise RuntimeError("openai SDK not installed") from e
+            self._client = OpenAI(api_key=self._api_key) if self._api_key else OpenAI()
+        return self._client
+
     def ask(self, question: str) -> AgentResponse:
         """Send one user turn and run the tool loop to completion."""
-        client = self._get_client()
+        if self._backend == "openai":
+            return self._ask_openai(question)
+        return self._ask_anthropic(question)
+
+    def _ask_anthropic(self, question: str) -> AgentResponse:
+        client = self._get_anthropic_client()
         tool_calls: list[ToolCall] = []
         messages: list[dict] = [{"role": "user", "content": question}]
 
@@ -663,5 +712,84 @@ class ComputeAdvisor:
 
         raise RuntimeError(
             f"Exceeded max_tool_calls={self._max_tool_calls} without end_turn. "
+            "Investigate: the model is probably stuck in a tool loop."
+        )
+
+    def _ask_openai(self, question: str) -> AgentResponse:
+        client = self._get_openai_client()
+        openai_tools = _openai_tool_schemas()
+        tool_calls: list[ToolCall] = []
+        messages: list[dict] = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": question},
+        ]
+        usage_in = usage_out = 0
+
+        for _ in range(self._max_tool_calls):
+            resp = client.chat.completions.create(
+                model=self._model,
+                max_tokens=1024,
+                messages=messages,
+                tools=openai_tools,
+            )
+            choice = resp.choices[0]
+            msg = choice.message
+            if getattr(resp, "usage", None) is not None:
+                usage_in += resp.usage.prompt_tokens
+                usage_out += resp.usage.completion_tokens
+
+            llm_tool_calls = getattr(msg, "tool_calls", None) or []
+            if choice.finish_reason != "tool_calls" or not llm_tool_calls:
+                return AgentResponse(
+                    text=msg.content or "",
+                    tool_calls=tool_calls,
+                    usage={
+                        "input_tokens": usage_in,
+                        "output_tokens": usage_out,
+                        "cache_read_input_tokens": 0,
+                        "cache_creation_input_tokens": 0,
+                    },
+                )
+
+            messages.append(
+                {
+                    "role": "assistant",
+                    "content": msg.content,
+                    "tool_calls": [
+                        {
+                            "id": tc.id,
+                            "type": "function",
+                            "function": {
+                                "name": tc.function.name,
+                                "arguments": tc.function.arguments,
+                            },
+                        }
+                        for tc in llm_tool_calls
+                    ],
+                }
+            )
+            for tc in llm_tool_calls:
+                try:
+                    params = json.loads(tc.function.arguments or "{}")
+                except json.JSONDecodeError:
+                    params = {}
+                call = ToolCall(name=tc.function.name, params=params)
+                try:
+                    call.result = self._executor(call.name, call.params)
+                    content = json.dumps(call.result)
+                except Exception as e:
+                    call.error = str(e)
+                    content = json.dumps({"error": str(e)})
+                tool_calls.append(call)
+                messages.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": tc.id,
+                        "content": content,
+                    }
+                )
+
+        raise RuntimeError(
+            f"Exceeded max_tool_calls={self._max_tool_calls} without a final answer. "
             "Investigate: the model is probably stuck in a tool loop."
         )

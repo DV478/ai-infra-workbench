@@ -15,6 +15,8 @@ quotes are dropped by ``extract_facts`` before they reach the store.
 
 from __future__ import annotations
 
+import json
+import os
 from collections.abc import Callable
 from typing import Any, Protocol
 
@@ -194,6 +196,102 @@ class AnthropicExtractorClient:
             if getattr(block, "type", None) == "tool_use" and block.name == "emit_facts":
                 return list(block.input.get("facts", []))
         return []
+
+
+def _anthropic_to_openai_tool(tool: dict) -> dict:
+    """Translate an Anthropic tool schema to the OpenAI function-tool shape."""
+    return {
+        "type": "function",
+        "function": {
+            "name": tool["name"],
+            "description": tool["description"],
+            "parameters": tool["input_schema"],
+        },
+    }
+
+
+class OpenAIExtractorClient:
+    """Real OpenAI SDK client. Lazy-imports the SDK.
+
+    Uses the chat-completions tool-use pattern with ``tool_choice`` forced
+    to ``emit_facts`` so the model always produces structured output in a
+    single call — mirroring the Anthropic client's contract.
+    """
+
+    def __init__(
+        self,
+        api_key: str | None = None,
+        model: str = DEFAULT_OPENAI_MODEL,
+        max_tokens: int = 2048,
+    ):
+        self._api_key = api_key
+        self._model = model
+        self._max_tokens = max_tokens
+        self._client = None
+
+    def _get_client(self):
+        if self._client is None:
+            try:
+                from openai import OpenAI
+            except ImportError as e:
+                raise RuntimeError("openai SDK not installed") from e
+            self._client = OpenAI(api_key=self._api_key) if self._api_key else OpenAI()
+        return self._client
+
+    def emit(self, doc: MarketIntelDoc) -> list[dict[str, Any]]:
+        client = self._get_client()
+        prompt = _render_user_prompt(doc)
+        resp = client.chat.completions.create(
+            model=self._model,
+            max_tokens=self._max_tokens,
+            messages=[
+                {"role": "system", "content": EXTRACT_SYSTEM_PROMPT},
+                {"role": "user", "content": prompt},
+            ],
+            tools=[_anthropic_to_openai_tool(FACT_TOOL_SCHEMA)],
+            tool_choice={"type": "function", "function": {"name": "emit_facts"}},
+        )
+        msg = resp.choices[0].message
+        tool_calls = getattr(msg, "tool_calls", None) or []
+        for tc in tool_calls:
+            if tc.function.name == "emit_facts":
+                payload = json.loads(tc.function.arguments or "{}")
+                return list(payload.get("facts", []))
+        return []
+
+
+# ---------------------------------------------------------------------------
+# Factory — picks the right backend from an API key prefix.
+# ---------------------------------------------------------------------------
+
+
+ExtractorBackend = AnthropicExtractorClient | OpenAIExtractorClient
+
+
+def make_extractor_client(
+    api_key: str | None = None,
+    model: str | None = None,
+) -> ExtractorBackend:
+    """Return an extractor client matched to the provided API key.
+
+    Reads ``ANTHROPIC_API_KEY`` or ``OPENAI_API_KEY`` from env if
+    ``api_key`` is not given. The key prefix picks the backend
+    (``sk-ant-*`` → Anthropic, ``sk-*`` → OpenAI). The owner uses
+    ``ANTHROPIC_API_KEY`` as the canonical env var name regardless of
+    which key is in it, so the same workflow keeps working whether the
+    key swaps between providers.
+    """
+    if api_key is None:
+        api_key = os.getenv("ANTHROPIC_API_KEY") or os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise ValueError(
+            "No API key provided. Set ANTHROPIC_API_KEY (accepts either an "
+            "Anthropic 'sk-ant-*' or OpenAI 'sk-*' key) or pass api_key=..."
+        )
+    backend = detect_backend(api_key)
+    if backend == "anthropic":
+        return AnthropicExtractorClient(api_key=api_key, model=model or DEFAULT_MODEL)
+    return OpenAIExtractorClient(api_key=api_key, model=model or DEFAULT_OPENAI_MODEL)
 
 
 def _render_user_prompt(doc: MarketIntelDoc) -> str:

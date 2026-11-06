@@ -141,3 +141,91 @@ def test_unknown_model_raises():
 def test_unknown_gpu_raises():
     with pytest.raises(ValueError, match="No GPU with id"):
         run_tool("decode_tps", {"gpu_id": "fake_gpu", "model": "llama-3-8b"})
+
+
+# ---------- Dual-backend dispatch ------------------------------------------
+
+
+def test_compute_advisor_picks_backend_from_key_prefix():
+    from core.agents.compute_advisor import (
+        DEFAULT_MODEL,
+        DEFAULT_OPENAI_MODEL,
+        ComputeAdvisor,
+    )
+
+    anthropic_advisor = ComputeAdvisor(api_key="sk-ant-api03-test")
+    openai_advisor = ComputeAdvisor(api_key="sk-proj-test")
+
+    assert anthropic_advisor.backend == "anthropic"
+    assert anthropic_advisor.model == DEFAULT_MODEL
+    assert openai_advisor.backend == "openai"
+    assert openai_advisor.model == DEFAULT_OPENAI_MODEL
+
+
+def test_compute_advisor_openai_tool_loop(monkeypatch):
+    """ComputeAdvisor's OpenAI path must run the tool loop end-to-end.
+
+    Stub the OpenAI SDK with a two-turn response: the model first asks
+    for ``decode_tps``, the fake executor returns a canned dict, and the
+    second response is a plain-text answer. Verifies: tool-call dispatch,
+    tool-result message shape, and final AgentResponse text.
+    """
+    import json
+    import sys
+    import types
+    from unittest.mock import MagicMock
+
+    from core.agents.compute_advisor import ComputeAdvisor
+
+    # --- Fake OpenAI module -------------------------------------------------
+    first_tc = MagicMock()
+    first_tc.id = "call_1"
+    first_tc.function.name = "decode_tps"
+    first_tc.function.arguments = json.dumps(
+        {"gpu_id": "h100_sxm5_80gb", "model": "llama-3-8b", "batch_size": 32}
+    )
+
+    first_resp = MagicMock()
+    first_resp.choices = [MagicMock()]
+    first_resp.choices[0].finish_reason = "tool_calls"
+    first_resp.choices[0].message.content = None
+    first_resp.choices[0].message.tool_calls = [first_tc]
+    first_resp.usage.prompt_tokens = 100
+    first_resp.usage.completion_tokens = 20
+
+    second_resp = MagicMock()
+    second_resp.choices = [MagicMock()]
+    second_resp.choices[0].finish_reason = "stop"
+    second_resp.choices[0].message.content = "Decode throughput is 180 tok/s on H100."
+    second_resp.choices[0].message.tool_calls = None
+    second_resp.usage.prompt_tokens = 140
+    second_resp.usage.completion_tokens = 15
+
+    fake_client = MagicMock()
+    fake_client.chat.completions.create.side_effect = [first_resp, second_resp]
+    fake_module = types.ModuleType("openai")
+    fake_module.OpenAI = MagicMock(return_value=fake_client)
+    monkeypatch.setitem(sys.modules, "openai", fake_module)
+
+    # --- Executor stub ------------------------------------------------------
+    def _exec(name, params):
+        assert name == "decode_tps"
+        return {"tokens_per_second": 180.0, "bound": "memory"}
+
+    advisor = ComputeAdvisor(api_key="sk-proj-test", executor=_exec)
+    resp = advisor.ask("Decode TPS on H100 for llama-3-8b?")
+
+    assert resp.text == "Decode throughput is 180 tok/s on H100."
+    assert len(resp.tool_calls) == 1
+    assert resp.tool_calls[0].name == "decode_tps"
+    assert resp.tool_calls[0].result == {"tokens_per_second": 180.0, "bound": "memory"}
+    assert resp.usage["input_tokens"] == 240
+    assert resp.usage["output_tokens"] == 35
+
+    # Second API call must include the tool-result message with matching id.
+    second_call_kwargs = fake_client.chat.completions.create.call_args_list[1].kwargs
+    msgs = second_call_kwargs["messages"]
+    tool_msgs = [m for m in msgs if m["role"] == "tool"]
+    assert len(tool_msgs) == 1
+    assert tool_msgs[0]["tool_call_id"] == "call_1"
+    assert json.loads(tool_msgs[0]["content"])["tokens_per_second"] == 180.0

@@ -32,9 +32,9 @@ from core.market_intel import (
     FakeExtractorClient,
     MarketIntelDoc,
     extract_facts,
+    make_extractor_client,
     summarise,
 )
-from core.market_intel.extractor import AnthropicExtractorClient
 
 
 def _fake_callback(doc: MarketIntelDoc) -> list[dict]:
@@ -91,8 +91,16 @@ def _fake_callback(doc: MarketIntelDoc) -> list[dict]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--api-key", default=os.getenv("ANTHROPIC_API_KEY"))
-    ap.add_argument("--model", default="claude-haiku-4-5-20251001")
+    ap.add_argument(
+        "--api-key",
+        default=os.getenv("ANTHROPIC_API_KEY") or os.getenv("OPENAI_API_KEY"),
+        help="Anthropic ('sk-ant-*') or OpenAI ('sk-*') key — backend auto-picked from prefix",
+    )
+    ap.add_argument(
+        "--model",
+        default=None,
+        help="override model id; default is backend-appropriate (Haiku 4.5 / gpt-4o-mini)",
+    )
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--fake", action="store_true",
                     help="use deterministic rule-based extractor (no API spend)")
@@ -106,11 +114,14 @@ def main() -> int:
         model_label = "fake (rule-based)"
     else:
         if not args.api_key:
-            print("No ANTHROPIC_API_KEY set. Use --api-key, --fake, or set env var.",
-                  file=sys.stderr)
+            print(
+                "No API key set. Set ANTHROPIC_API_KEY (accepts an Anthropic or "
+                "OpenAI key), pass --api-key, or use --fake.",
+                file=sys.stderr,
+            )
             return 1
-        client = AnthropicExtractorClient(api_key=args.api_key, model=args.model)
-        model_label = args.model
+        client = make_extractor_client(api_key=args.api_key, model=args.model)
+        model_label = f"{type(client).__name__} :: {getattr(client, '_model', '?')}"
 
     def extract_fn(doc: MarketIntelDoc):
         return extract_facts(doc, client)

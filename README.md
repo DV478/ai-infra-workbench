@@ -85,7 +85,7 @@ notebooks/
 
 scripts/
 ├── log_prices.py               ✅ Vast.ai API + manual Monday log
-├── run_eval.py                 ✅ live compute-advisor eval runner (needs ANTHROPIC_API_KEY)
+├── run_eval.py                 ✅ live compute-advisor eval runner (Anthropic or OpenAI key)
 ├── run_market_intel.py         ✅ extract facts from data/raw/market/ (--fake for no-spend)
 └── mcp_advisor_server.py       ✅ MCP server — run advisor in Claude Desktop, no API spend
 
@@ -123,9 +123,12 @@ Dry-run the price logger against live Vast.ai:
 python scripts/log_prices.py --dry-run
 ```
 
-Run the compute-advisor eval against the live Anthropic API:
+Run the compute-advisor eval against a live LLM backend. `ANTHROPIC_API_KEY`
+accepts **either** an Anthropic (`sk-ant-*`) or OpenAI (`sk-*`) key — the
+backend is auto-picked from the prefix. Default models: Claude Haiku 4.5
+for Anthropic, `gpt-4o-mini` for OpenAI.
 ```powershell
-$env:ANTHROPIC_API_KEY = "<your key>"
+$env:ANTHROPIC_API_KEY = "<sk-ant-... or sk-...>"
 python scripts/run_eval.py --limit 5     # smoke test
 python scripts/run_eval.py               # full 20-question run → eval_report.md
 ```
@@ -143,8 +146,8 @@ Extract facts from earnings transcripts / press releases / news:
 #   <doc_type>__<company>__<YYYY-MM-DD>__<slug>.txt
 python scripts/run_market_intel.py --fake --dry-run   # rule-based extractor, no API
 python scripts/run_market_intel.py --fake             # write facts to data/market_intel.duckdb
-$env:ANTHROPIC_API_KEY = "<key>"
-python scripts/run_market_intel.py                    # real extraction via Claude Haiku 4.5
+$env:ANTHROPIC_API_KEY = "<sk-ant-... or sk-...>"     # Anthropic or OpenAI key — backend auto-picked
+python scripts/run_market_intel.py                    # real extraction via Haiku 4.5 or gpt-4o-mini
 ```
 Then visit the Market Intel page in the Streamlit app — it reads
 `data/market_intel.duckdb` and renders every fact with its verbatim quote.
@@ -162,11 +165,13 @@ The repo is wired for a one-click deploy.
    - **Branch**: `main`
    - **Main file path**: `build1_inference_calculator/app.py`
    - **App URL** (optional): a custom subdomain
-4. Click **Advanced settings → Secrets** and paste:
+4. Click **Advanced settings → Secrets** and paste one of:
    ```toml
-   ANTHROPIC_API_KEY = "sk-ant-..."
+   ANTHROPIC_API_KEY = "sk-ant-..."   # Anthropic key — uses Claude Haiku 4.5
+   # or
+   ANTHROPIC_API_KEY = "sk-..."       # OpenAI key — uses gpt-4o-mini
    ```
-   The compute advisor and market-intel live extraction both read this env var. Without it, those pages fall back to the no-spend UI (tool explorer / rule-based extractor).
+   The env var name stays `ANTHROPIC_API_KEY` for either provider; the backend is picked from the key prefix. Without a key set, those pages fall back to the no-spend UI (tool explorer / rule-based extractor).
 5. Click **Deploy**.
 
 The app installs from `requirements.txt` (the pyproject.toml is used only for local dev). Each page has a `sys.path` shim at the top that makes `from core.X import ...` resolve even if the editable install step is skipped.
@@ -201,9 +206,9 @@ Ordered by criticality. Items 1 and 2 are the biggest exposures.
 
 5. **Drop MLPerf CSVs** into `data/raw/mlperf/` named `<round>__<label>.csv` (e.g. `v5.0__datacenter.csv`) from https://mlcommons.org/en/inference-datacenter-50/. Validation page auto-reads them.
 
-6. **Live advisor eval** once you have an Anthropic API key:
+6. **Live advisor eval** once you have an API key (Anthropic or OpenAI):
    ```powershell
-   $env:ANTHROPIC_API_KEY = "..."
+   $env:ANTHROPIC_API_KEY = "<sk-ant-... or sk-...>"
    python scripts/run_eval.py --limit 5    # smoke
    python scripts/run_eval.py              # full → eval_report.md
    ```

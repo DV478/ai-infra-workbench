@@ -1,10 +1,9 @@
 """Live eval runner for the compute advisor.
 
-Runs the 20-question set from ``core/eval/questions.py`` against the real
-Anthropic API (Haiku 4.5 by default), writes a markdown report, and prints
-a one-line summary suitable for the README badge.
-
-Needs ``ANTHROPIC_API_KEY`` in the environment or ``--api-key``.
+Runs the 20-question set from ``core/eval/questions.py`` against a live
+LLM backend (Anthropic or OpenAI — picked automatically from the key
+prefix). ``ANTHROPIC_API_KEY`` is the canonical env var and accepts
+either an Anthropic (``sk-ant-*``) or OpenAI (``sk-*``) key.
 
 Usage:
     python scripts/run_eval.py
@@ -32,15 +31,27 @@ from core.eval.questions import EVAL_QUESTIONS
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--api-key", default=os.getenv("ANTHROPIC_API_KEY"))
-    ap.add_argument("--model", default="claude-haiku-4-5-20251001")
+    ap.add_argument(
+        "--api-key",
+        default=os.getenv("ANTHROPIC_API_KEY") or os.getenv("OPENAI_API_KEY"),
+        help="Anthropic ('sk-ant-*') or OpenAI ('sk-*') key — backend auto-picked from prefix",
+    )
+    ap.add_argument(
+        "--model",
+        default=None,
+        help="override model id; default is backend-appropriate (Haiku 4.5 / gpt-4o-mini)",
+    )
     ap.add_argument("--limit", type=int, default=None, help="only run the first N questions")
     ap.add_argument("--out", default="eval_report.md")
     ap.add_argument("--max-tool-calls", type=int, default=8)
     args = ap.parse_args()
 
     if not args.api_key:
-        print("No ANTHROPIC_API_KEY set. Use --api-key or set the env var.", file=sys.stderr)
+        print(
+            "No API key set. Set ANTHROPIC_API_KEY (accepts an Anthropic or "
+            "OpenAI key) or pass --api-key.",
+            file=sys.stderr,
+        )
         return 1
 
     questions = EVAL_QUESTIONS[: args.limit] if args.limit else EVAL_QUESTIONS
@@ -48,6 +59,7 @@ def main() -> int:
     advisor = ComputeAdvisor(
         api_key=args.api_key, model=args.model, max_tool_calls=args.max_tool_calls
     )
+    print(f"backend: {advisor.backend} :: {advisor.model}", file=sys.stderr)
 
     results = []
     total_in = total_out = total_cache_read = 0
@@ -76,7 +88,7 @@ def main() -> int:
     summary = summarise([r for _, _, r in results])
 
     _write_report(
-        Path(args.out), args.model, results, summary, elapsed,
+        Path(args.out), f"{advisor.backend} :: {advisor.model}", results, summary, elapsed,
         total_in, total_out, total_cache_read,
     )
 

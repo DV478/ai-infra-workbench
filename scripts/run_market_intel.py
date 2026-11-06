@@ -38,8 +38,8 @@ from core.market_intel import (
     MarketIntelDoc,
     MarketIntelStore,
     extract_facts,
+    make_extractor_client,
 )
-from core.market_intel.extractor import AnthropicExtractorClient
 
 ROOT = Path(__file__).resolve().parent.parent
 RAW_DIR = ROOT / "data" / "raw" / "market"
@@ -170,10 +170,16 @@ def main() -> int:
     if args.fake:
         client = FakeExtractorClient(callback=_fake_callback)
     else:
-        if not os.getenv("ANTHROPIC_API_KEY"):
-            print("ANTHROPIC_API_KEY not set — use --fake for a no-spend run", file=sys.stderr)
+        if not (os.getenv("ANTHROPIC_API_KEY") or os.getenv("OPENAI_API_KEY")):
+            print(
+                "No API key set — ANTHROPIC_API_KEY accepts either an Anthropic "
+                "('sk-ant-*') or OpenAI ('sk-*') key. Or pass --fake for a "
+                "no-spend run.",
+                file=sys.stderr,
+            )
             return 2
-        client = AnthropicExtractorClient()
+        client = make_extractor_client()
+        print(f"backend: {type(client).__name__}", file=sys.stderr)
 
     store = None if args.dry_run else MarketIntelStore(STORE_PATH)
     total_facts = 0

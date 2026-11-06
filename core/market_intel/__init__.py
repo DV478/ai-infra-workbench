@@ -21,8 +21,12 @@ from core.market_intel.eval import (
 from core.market_intel.extractor import (
     EXTRACT_SYSTEM_PROMPT,
     FACT_TOOL_SCHEMA,
+    AnthropicExtractorClient,
     FakeExtractorClient,
+    OpenAIExtractorClient,
+    detect_backend,
     extract_facts,
+    make_extractor_client,
 )
 from core.market_intel.schema import (
     FactKind,
@@ -35,6 +39,7 @@ __all__ = [
     "EXTRACT_SYSTEM_PROMPT",
     "FACT_TOOL_SCHEMA",
     "GOLD_CASES",
+    "AnthropicExtractorClient",
     "CaseResult",
     "EvalCase",
     "ExpectedFact",
@@ -43,8 +48,11 @@ __all__ = [
     "MarketIntelDoc",
     "MarketIntelFact",
     "MarketIntelStore",
+    "OpenAIExtractorClient",
+    "detect_backend",
     "extract_facts",
     "grade_case",
+    "make_extractor_client",
     "run_eval_set",
     "summarise",
 ]
