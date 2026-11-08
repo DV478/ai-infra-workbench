@@ -1,6 +1,8 @@
 # UX rebuild execution plan — Build 1
 
-> Executor-Claude: this file is a top-to-bottom work list. Grep for `### M` to find your milestone. Each milestone lands as its own commit. Do not skip the "Preserved strengths" and "Design principles" sections — they govern every call below.
+> **STATUS AS OF 2026-11-08: ALL 11 MILESTONES SHIPPED (M1 → M11).** Latest commit `892d9b1`. See [[project-status]] memory for the per-milestone commit hashes. The plan below is preserved as-is for historical reference and for anyone revisiting the architectural decisions. If you're picking up Build 2 or Build 3, create a fresh plan — don't reuse this structure.
+>
+> Executor-Claude note: this file is a top-to-bottom work list. Grep for `### M` to find your milestone. Each milestone lands as its own commit. Do not skip the "Preserved strengths" and "Design principles" sections — they govern every call below.
 
 ## Plan at a glance
 
