@@ -157,25 +157,25 @@ _CTAS = [
         "icon": "🤖",
         "label": "Ask the Advisor",
         "sub": "Natural-language sizing questions, answered with real tool calls.",
-        "page": "pages/4_Advisor.py",
+        "page": "pages/1_Ask_the_Advisor.py",
     },
     {
         "icon": "💷",
         "label": "What does it cost",
         "sub": "Five options on one $/M-token ruler, with break-even + demand-stress.",
-        "page": "pages/3_TCO.py",
+        "page": "pages/3_What_does_it_cost.py",
     },
     {
         "icon": "📏",
         "label": "Will it fit",
         "sub": "GPU memory check for any model + batch size.",
-        "page": "pages/1_Spec.py",
+        "page": "pages/4_Will_it_fit.py",
     },
     {
         "icon": "🎯",
         "label": "How accurate",
         "sub": "Predicted vs measured tokens/s, cross-checked against MLPerf.",
-        "page": "pages/2_Validation.py",
+        "page": "pages/5_How_accurate.py",
     },
 ]
 

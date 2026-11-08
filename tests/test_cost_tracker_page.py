@@ -23,7 +23,7 @@ import pytest  # noqa: E402
 from _ui import cost_counter  # noqa: E402
 from streamlit.testing.v1 import AppTest  # noqa: E402
 
-PAGE = _BUILD1 / "pages" / "6_Cost_tracker.py"
+PAGE = _BUILD1 / "pages" / "2_Cost_tracker.py"
 
 
 def test_cost_tracker_empty_state_renders(monkeypatch, tmp_path):
