@@ -1,0 +1,13 @@
+{
+    "_note": "[SYNTHETIC — demo data] Representative output shape for a TinyLlama-1.1B smoke test on Kaggle T4. Real output lands at data/processed/t4_smoke_test.json once the owner runs notebooks/00_t4_smoke_test.ipynb.",
+    "model": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+    "gpu": "Tesla T4 (demo)",
+    "dtype": "fp16",
+    "batch_size": 1,
+    "kv_seq_len": 1024,
+    "measured_decode_tps": 102.3,
+    "predicted_decode_tps": 108.7,
+    "error_pct": 6.3,
+    "notes_src": "Synthetic representative values. 60-150 tok/s is the realistic range for T4 serving TinyLlama-1.1B at batch 1.",
+    "demo_bundle": true
+}

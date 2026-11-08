@@ -1,0 +1,7 @@
+Submitter,System,Benchmark,Scenario,Result,Availability
+[SYNTHETIC — demo],Supermicro SYS-821GE-TNHR (8x H100 SXM5-80GB) (demo),Llama2-70B,Offline,24850.0,available
+[SYNTHETIC — demo],Supermicro SYS-821GE-TNHR (8x H100 SXM5-80GB) (demo),Llama2-70B,Server,21100.0,available
+[SYNTHETIC — demo],Dell PowerEdge XE9680 (8x H100 SXM5-80GB) (demo),Mixtral-8x7B,Offline,34200.0,available
+[SYNTHETIC — demo],Dell PowerEdge XE9680 (8x H100 SXM5-80GB) (demo),Mixtral-8x7B,Server,28700.0,available
+[SYNTHETIC — demo],NVIDIA DGX H100 (8x H100 SXM5-80GB) (demo),GPT-J 6B,Offline,88400.0,available
+[SYNTHETIC — demo],NVIDIA DGX H100 (8x H100 SXM5-80GB) (demo),GPT-J 6B,Server,76500.0,available
