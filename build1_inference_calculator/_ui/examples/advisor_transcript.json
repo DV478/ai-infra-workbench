@@ -1,0 +1,40 @@
+{
+  "_note": "[SYNTHETIC — demo transcript] Canned Advisor conversation shown on the no-key path so visitors see how the agent works without an API key being set. Replace by actually chatting once OPENAI_API_KEY or ANTHROPIC_API_KEY is configured.",
+  "model": "gpt-4o-mini",
+  "turns": [
+    {
+      "role": "user",
+      "text": "Should I rent, buy, or API an H100 for Llama-3-70B at 50 rps for 3 years?"
+    },
+    {
+      "role": "assistant",
+      "text": "**TL;DR: Neocloud rental is cheapest at $2.43/M output tokens — 1.8× cheaper than on-demand hyperscaler, 7% cheaper than the Together AI API.** Owning (3-year depreciation) runs at $3.12/M — 29% more than neocloud, so you'd only own if you had very steady > 70% utilisation plus a reason to keep the capex on-balance.\n\nWorkload sized at ~50 rps = ~2.5 B output tokens/year. All five options sit between $2.40 and $4.40 per million output tokens — not an order of magnitude apart, so the choice turns on operational preference (lock-in, latency SLO, who owns the ops burden) rather than raw $.",
+      "tool_calls": [
+        {
+          "name": "check_memory_fit",
+          "input": {"gpu_id": "h100_sxm5_80gb", "model": "llama_3_70b", "dtype": "fp16", "batch_size": 32, "seqlen": 2048},
+          "result": {"fits": false, "model": "Llama-3-70B", "gpu": "H100 SXM 80 GB", "weights_gb": 140.0, "kv_cache_gb": 10.5, "activations_gb": 2.0, "headroom_gb": -72.5, "note": "70B FP16 needs model-parallel across 2+ H100s; sized below for an 8-GPU cluster."}
+        },
+        {
+          "name": "compare_tco",
+          "input": {"gpu_id": "h100_sxm5_80gb", "model": "llama_3_70b", "batch_size": 32, "busy_fraction": 0.60, "reserved_hourly": 2.80, "on_demand_hourly": 4.50, "neocloud_hourly": 2.49, "api_name": "Together AI", "api_output_price_per_m": 0.88},
+          "result": {"options": [
+            {"name": "Owning (capex $32k, 3y)", "usd_per_m_output_tokens": 3.12, "total_3y_usd": 84072},
+            {"name": "Reserved 3y cloud", "usd_per_m_output_tokens": 2.73, "total_3y_usd": 73584},
+            {"name": "On-demand cloud", "usd_per_m_output_tokens": 4.39, "total_3y_usd": 118260},
+            {"name": "Neocloud (Nebius/Nscale)", "usd_per_m_output_tokens": 2.43, "total_3y_usd": 65437},
+            {"name": "Together AI API", "usd_per_m_output_tokens": 2.64, "total_3y_usd": 71175}
+          ]}
+        },
+        {
+          "name": "compute_break_even",
+          "input": {"option_a": "owned", "option_b": "reserved", "busy_fraction_range": [0.3, 0.9]},
+          "result": {"pivot_variable": "busy_fraction", "pivot_value": 0.72, "option_a": "owned", "option_b": "reserved", "note": "Owning beats renting reserved once you're decoding more than 72% of the hours you pay for."}
+        }
+      ],
+      "usage": {"prompt_tokens": 2480, "completion_tokens": 318, "prompt_tokens_details": {"cached_tokens": 1800}},
+      "cost_gbp": 0.00037,
+      "latency_ms": 2340
+    }
+  ]
+}
