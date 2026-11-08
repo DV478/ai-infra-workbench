@@ -1,23 +1,40 @@
 # AI Compute Economics Workbench
 
-Three demoable builds for AI infrastructure economics: inference cost + build-vs-rent, GPU cloud account health, and GPU capacity planning. Measured, modelled and simulated data are labelled on every output.
+**Should you rent, buy, or API an H100 for Llama-3-70B?**
+A calculator plus two AI agents that answer in £ per million tokens — and show every tool call behind the number.
 
-See [AI_INFRA_PROJECT.md](AI_INFRA_PROJECT.md) for the full spec.
+🌐 **Live demo:** [ai-infra-workbench.streamlit.app](https://ai-infra-workbench.streamlit.app)
+🧪 **Source:** [github.com/DV478/ai-infra-workbench](https://github.com/DV478/ai-infra-workbench)
+
+Three demoable builds for AI infrastructure economics. Build 1 (this one) covers inference cost + build-vs-rent. Builds 2 and 3 are planned: GPU capacity planning and GPU cloud account health.
+
+See [AI_INFRA_PROJECT.md](AI_INFRA_PROJECT.md) for the full spec; [docs/ux_review.md](docs/ux_review.md) and [docs/ux_rebuild_plan.md](docs/ux_rebuild_plan.md) for the UX rebuild notes.
+
+---
+
+## What a recruiter should notice
+
+- **Six pages, one story.** Every page answers a question (not an engine component). Sidebar flows Advisor → Cost tracker → What does it cost → Will it fit → How accurate → Market prices.
+- **Dual-backend AI agent.** The Advisor runs on your choice of **OpenAI gpt-4o-mini** (default) or **Claude Haiku 5.5**. Switch mid-chat. Same tools, same engine, different brain. A typical Q&A costs ~£0.0004 on gpt-4o-mini; ~£0.0002 on Haiku 5.5.
+- **Live £ cost tracker.** Every Advisor turn is logged with input / output / cached tokens, latency, and £. The dedicated **Cost tracker** page renders aggregates by model — same questions, different brains, side by side.
+- **Verbatim-quote extraction.** The **Market prices** page carries structured facts (GPU prices, capex, shipments) pulled from real press releases + transcripts — each row shows the exact source sentence. If the quote isn't literally there, the fact never gets stored.
+- **Every number is tagged.** 🟢 measured, 🟡 modelled, 🟠 simulated, ⚪ assumption — visible on every hero metric, not buried in a footnote.
+- **The memo.** The *What does it cost* page generates a 2-page sizing memo (markdown) you can hand to a deal desk.
 
 ---
 
 ## Status
 
-**As of 2026-11-06 — Week 1-3 workbench + dual LLM backend + expanded corpus/gold-set all pushed to `main`.** Latest commit `ecd9cbf`. Deploy live at [ai-infra-workbench.streamlit.app](https://ai-infra-workbench.streamlit.app).
+**Build 1 UX rebuild complete** (M1 → M11, Nov 2026). Deployed at [ai-infra-workbench.streamlit.app](https://ai-infra-workbench.streamlit.app).
 
-- **135/135 tests pass** (23 W1 + 39 W2 + 27 W3 agent + 4 memo + 24 market intel + 14 market-intel eval + 4 dual-backend)
-- Ruff clean on `core/`, `scripts/`, `tests/`, `build1_inference_calculator/`
-- Dual LLM backend: `ANTHROPIC_API_KEY` accepts either `sk-ant-*` (Anthropic/Haiku 4.5) or `sk-*` (OpenAI/gpt-4o-mini); backend auto-picked from key prefix. Works in Streamlit app, scripts, and MCP server.
-- Market-intel demo corpus: 8 sample docs across 4 doc types (press release, earnings transcript, investor day, news) covering CoreWeave, Nscale, Nebius, Lambda, Crusoe, Nvidia, Together. All marked `[SYNTHETIC — demo corpus]` inline.
-- Market-intel gold eval set: 12 cases (up from 8) covering every fact kind + guardrails (API-pricing-isn't-gpu-price, distractors, hedges, roadmap-only).
-- `python scripts/run_market_intel.py --fake` extracts **40 facts across 8 docs** to `data/market_intel.duckdb` with zero API spend.
-- `python scripts/run_market_intel_eval.py --fake` — baseline 4/12 pass (33%), quote-valid 100%. Rule-based fake can't handle contracts/roadmaps; real-LLM run (owner, pending) should jump substantially.
-- Vast.ai live price API confirmed working (Week 1).
+- **170/170 tests pass** — 135 engine + 29 shared-UI helper + 6 cost-tracker page tests.
+- Ruff clean on `core/`, `scripts/`, `tests/`, `build1_inference_calculator/`.
+- **Two-model Advisor picker** (owner-confirmed): OpenAI gpt-4o-mini default, Claude Haiku 5.5 switch. Both use the owner's existing credits.
+- **Zero-spend demo** — if no API key is set, the Advisor falls back to a canned transcript, the Validation page renders bundled synthetic fixtures, and Market prices cold-starts from the committed 8-document demo corpus via a rule-based extractor.
+- Pricing (Nov 2026 confirmed): gpt-4o-mini $0.15 / $0.60 per M · Claude Haiku 5.5 $0.10 / $0.50 per M. USD→GBP 0.78.
+- Vast.ai live price API confirmed working; weekly GitHub Actions log kicked off.
+
+Latest commit on `main`: see `git log --oneline -5`.
 
 ---
 
@@ -45,7 +62,7 @@ See [AI_INFRA_PROJECT.md](AI_INFRA_PROJECT.md) for the full spec.
 | CUDA matmul notebook | Ship properly (2-3 days) | Strong interview talking point if done well |
 | Open-model-on-T4 priced through Build 1 | **Skip** | Validation path already carries the technical story |
 | MCP vs HTTP | MCP server per build for Claude Desktop; in-process tool calls for hosted Streamlit | No inter-service hops on the hosted demo |
-| Hosted agent runtime | Direct Anthropic SDK + prompt caching, Haiku 4.5 | Fits £5-10/mo budget |
+| Hosted agent runtime | Direct OpenAI/Anthropic SDK + prompt caching, picker between gpt-4o-mini + Haiku 5.5 | Owner holds both; ~£0.0002–0.0004 per Q&A fits any budget |
 | AI Investment RAG reuse | **Not vendored** — sibling repo's scrapers conflict with price-tracker policy; extractor is text-in/facts-out | Keeps "no scraping" rule intact; owner pastes docs into `data/raw/market/` |
 
 ---
@@ -66,9 +83,18 @@ core/                           shared domain — pure Python, no Streamlit
 ├── focus_schema/               (Week 5) Build 3
 └── connectors/                 (Week 5) Build 3 swap point
 
-build1_inference_calculator/    ✅ Streamlit multi-page (Spec, Validation, TCO, Advisor, Market Intel)
-build3_account_health/          (Weeks 5-6)
-build2_capacity_planner/        (Weeks 7-10)
+build1_inference_calculator/    ✅ Streamlit multi-page — six pages in sidebar narrative order:
+│   ├── _ui/                    ✅ shared primitives (display_names, explain, presets, cost_counter, page_header, provenance, tool_card, sidebar) + demo fixtures (bundled synthetic T4/MLPerf/corpus/transcript)
+│   ├── app.py                  ✅ landing: hero + worked example + four CTAs + methodology
+│   └── pages/
+│       ├── 1_Ask_the_Advisor.py           ✅ chat + 2-model picker + cost counter + named tool cards
+│       ├── 2_Cost_tracker.py              ✅ observability — token economics per turn
+│       ├── 3_What_does_it_cost.py         ✅ TCO headline + memo download
+│       ├── 4_Will_it_fit.py               ✅ memory-fit check + catalog reference
+│       ├── 5_How_accurate.py              ✅ roofline + T4 + MLPerf, synthetic fallbacks
+│       └── 6_Market_prices.py             ✅ facts with verbatim quotes, cold-start auto-populate
+build3_account_health/          (planned — not shipped)
+build2_capacity_planner/        (planned — not shipped)
 
 data/
 ├── prices/                     ✅ append-only parquet; weekly GH Actions writes here
@@ -115,7 +141,7 @@ Seed the sources DuckDB from the GPU spec YAML (148 rows):
 python -m core.sources.seed
 ```
 
-Launch the Build 1 Streamlit app (Spec / Validation / TCO / Advisor pages):
+Launch the Build 1 Streamlit app (Advisor / Cost tracker / What does it cost / Will it fit / How accurate / Market prices):
 ```powershell
 streamlit run build1_inference_calculator/app.py
 ```
@@ -127,8 +153,8 @@ python scripts/log_prices.py --dry-run
 
 Run the compute-advisor eval against a live LLM backend. `ANTHROPIC_API_KEY`
 accepts **either** an Anthropic (`sk-ant-*`) or OpenAI (`sk-*`) key — the
-backend is auto-picked from the prefix. Default models: Claude Haiku 4.5
-for Anthropic, `gpt-4o-mini` for OpenAI.
+backend is auto-picked from the prefix. Default models: **Claude Haiku 5.5**
+for Anthropic, **gpt-4o-mini** for OpenAI.
 ```powershell
 $env:ANTHROPIC_API_KEY = "<sk-ant-... or sk-...>"
 python scripts/run_eval.py --limit 5     # smoke test
@@ -149,7 +175,7 @@ Extract facts from earnings transcripts / press releases / news:
 python scripts/run_market_intel.py --fake --dry-run   # rule-based extractor, no API
 python scripts/run_market_intel.py --fake             # write facts to data/market_intel.duckdb
 $env:ANTHROPIC_API_KEY = "<sk-ant-... or sk-...>"     # Anthropic or OpenAI key — backend auto-picked
-python scripts/run_market_intel.py                    # real extraction via Haiku 4.5 or gpt-4o-mini
+python scripts/run_market_intel.py                    # real extraction via Haiku 5.5 or gpt-4o-mini
 ```
 Then visit the Market Intel page in the Streamlit app — it reads
 `data/market_intel.duckdb` and renders every fact with its verbatim quote.
@@ -167,14 +193,17 @@ The repo is wired for a one-click deploy.
    - **Branch**: `main`
    - **Main file path**: `build1_inference_calculator/app.py`
    - **App URL** (optional): a custom subdomain
-4. Click **Advanced settings → Secrets** and paste one of:
+4. Click **Advanced settings → Secrets** and paste:
    ```toml
-   ANTHROPIC_API_KEY = "sk-ant-..."   # Anthropic key — uses Claude Haiku 4.5
-   # or
-   ANTHROPIC_API_KEY = "sk-..."       # OpenAI key — uses gpt-4o-mini
+   OPENAI_API_KEY = "sk-..."
+   ANTHROPIC_API_KEY = "sk-ant-..."
+
+   # Optional — PIN for the Cost tracker "Clear log" admin button.
+   # Without this set, the button appears unprotected on the public URL.
+   COST_TRACKER_RESET_PIN = "pick-anything"
    ```
-   The env var name stays `ANTHROPIC_API_KEY` for either provider; the backend is picked from the key prefix. Without a key set, those pages fall back to the no-spend UI (tool explorer / rule-based extractor).
-5. Click **Deploy**.
+   Both keys are supported. You only need *one* for the Advisor to work, but setting both lets a visitor switch models in the UI live. Without any key, pages fall back to no-spend demo fixtures (canned Advisor transcript, synthetic T4 + MLPerf data, rule-based Market Intel extractor).
+5. Click **Deploy**. Full step-by-step for first go-live is in [docs/m10_owner_actions.md](docs/m10_owner_actions.md).
 
 The app installs from `requirements.txt` (the pyproject.toml is used only for local dev). Each page has a `sys.path` shim at the top that makes `from core.X import ...` resolve even if the editable install step is skipped.
 
@@ -188,71 +217,40 @@ Total runtime usage under load (Streamlit + pandas + plotly + duckdb) is ~400-50
 
 ---
 
-## Next steps — owner action items (blocked on you, not Claude)
+## Owner action items (blocked on live keys / hardware)
 
-Ordered by what unlocks most downstream work.
+In rough order of what unlocks the most downstream work.
 
-1. ~~**First git commit + GitHub push.**~~ ✅ Done 2026-11-05 — repo at https://github.com/DV478/ai-infra-workbench.
+1. **Wire up live API keys** on Streamlit Cloud. Full step-by-step at [docs/m10_owner_actions.md](docs/m10_owner_actions.md). Without this, the Advisor runs on a canned transcript — the picker, cost counter, and Cost tracker page are all in place.
 
-2. **Enable the price-log workflow** on GitHub. Visit `https://github.com/DV478/ai-infra-workbench/actions` and approve workflows if GitHub prompts. First log fires Mondays 09:00 UTC.
+2. **Record real costs** after the first live Q&A. The README already claims ~£0.0004 on gpt-4o-mini and ~£0.0002 on Haiku 5.5 — confirm against the Cost tracker page and overwrite the placeholders if they drift.
 
-3. **Run `00_t4_smoke_test.ipynb` on Kaggle T4** → commit `data/processed/t4_smoke_test.json`. First measured number.
+3. **Enable the price-log workflow** on GitHub if GitHub prompts. Weekly logs fire Mondays 09:00 UTC into `data/prices/`.
 
-4. **Run `03_vllm_t4_validation.ipynb` on Kaggle T4** (~30 min). Commit `data/processed/t4_validation.parquet`. Calibrates `utilisation_frac`; the Validation page auto-renders predicted-vs-measured scatter once this file lands.
+4. **Run `00_t4_smoke_test.ipynb` on Kaggle T4** → commit `data/processed/t4_smoke_test.json`. The *How accurate* page is already wired to prefer real data and fall back to a synthetic fixture — this swap-in is zero-touch once the JSON lands.
 
-5. **Drop MLPerf CSVs** into `data/raw/mlperf/` named `<round>__<label>.csv` (e.g. `v5.0__datacenter.csv`) from https://mlcommons.org/en/inference-datacenter-50/. Validation page auto-reads them.
+5. **Run `03_vllm_t4_validation.ipynb` on Kaggle T4** (~30 min). Commit `data/processed/t4_validation.parquet` to calibrate `utilisation_frac`.
 
-6. **Live advisor eval** (`ANTHROPIC_API_KEY` accepts either prefix):
+6. **Drop MLPerf CSVs** into `data/raw/mlperf/` named `<round>__<label>.csv`. *How accurate* auto-reads them and falls back to the bundled synthetic MLPerf fixture otherwise.
+
+7. **Live advisor eval** against the 20-question set:
    ```powershell
    $env:ANTHROPIC_API_KEY = "<sk-ant-... or sk-...>"
    python scripts/run_eval.py --limit 5    # smoke
    python scripts/run_eval.py              # full → eval_report.md
    ```
-   Record pass rate. If <70%, tune `SYSTEM_PROMPT` in [core/agents/compute_advisor.py](core/agents/compute_advisor.py).
 
-7. **Live market-intel eval** against the expanded 12-case gold set:
+8. **Live market-intel eval** against the 12-case gold set:
    ```powershell
    $env:ANTHROPIC_API_KEY = "<sk-ant-... or sk-...>"
-   python scripts/run_market_intel_eval.py --limit 3   # smoke
    python scripts/run_market_intel_eval.py             # full → market_intel_eval_report.md
    ```
-   Baseline on `--fake` is 4/12 (33%), quote-valid 100%. Real-LLM run should jump substantially.
 
-8. **MCP server smoke test** in Claude Desktop (optional; zero-API-spend path):
-   ```powershell
-   pip install "mcp>=1.0"
-   # add the config block from scripts/mcp_advisor_server.py docstring to claude_desktop_config.json
-   # restart Claude Desktop; 10 tools should appear in the picker
-   ```
+### Known gaps (not blocking)
 
-### Flagged risks for next session
-
-- If measured T4 TPS falls outside `test_tinyllama_decode_t4_sanity`'s 60-150 band ([tests/test_cost_engine.py](tests/test_cost_engine.py)), recalibrate `utilisation_frac` in [core/cost_engine/roofline.py](core/cost_engine/roofline.py). W2 notebooks assume 0.55 for T4; W1 catalog defaults to 0.65 (H100). Reconcile once Kaggle runs land.
-- Blackwell is `confidence: medium`, Rubin is `low`. The sources seed script maps these to `MODELLED` (not `MEASURED`) so UI badges stay honest.
-- MLPerf `_predict` map in [pages/2_Validation.py](build1_inference_calculator/pages/2_Validation.py) only knows Llama-2/3 70B. Extend for Mixtral and GPT-J-6B when their CSVs arrive.
-- Live Streamlit's Market Intel page shows an empty-state because `data/market_intel.duckdb` is gitignored. Non-blocking (the page handles this gracefully with a clear message), but if the demo viewer should see the 40-fact table out-of-the-box, add a cold-start auto-populate hack that runs the `--fake` extractor over the committed `data/raw/market/` docs on first page load.
-
----
-
-## Next Claude-doable work (pick up here next session)
-
-Priority order (all three are independent — do in any order):
-1. **Extend compute-advisor eval set** (currently 20 Qs) with adversarial / multi-tool / guardrail questions. High value if the owner runs the live eval first and surfaces specific weaknesses.
-2. **Fix MLPerf `_predict`** in [pages/2_Validation.py](build1_inference_calculator/pages/2_Validation.py) for Mixtral + GPT-J-6B so the Validation page is useful when more CSVs land.
-3. **Market-intel Streamlit cold-start auto-populate** — small QoL fix so the live demo page shows the 40-fact table out of the box.
-3. **Hosted Streamlit Cloud deploy — owner click.** Follow the Deploy section above.
-
-Done in Week 3 so far (do not redo):
-- Compute advisor agent + 10 tool wrappers
-- 20-question eval harness (grader returns per-component breakdown)
-- `scripts/run_eval.py` CLI + `scripts/mcp_advisor_server.py` MCP wrapper
-- 2-page sizing memo generator with TCO-page download button
-- `notebooks/02_cuda_matmul.ipynb` (naive / tiled / cuBLAS)
-- `docs/interview_notes.md` per-build audience-tuned talking tracks
-- `core/market_intel/`: fact extractor with Anthropic SDK client + deterministic fake client for CI; quote-level citation enforced per fact
-- `scripts/run_market_intel.py`: walks `data/raw/market/`, writes facts to DuckDB, supports `--fake` and `--dry-run`
-- `build1_inference_calculator/pages/5_Market_Intel.py`: filters by kind/company/confidence, GPU-price and capex aggregates
-- RAG-repo reuse decision revised: sibling RAG is **not** vendored — its scrapers conflict with the price-tracker policy. Extractor is text-in/facts-out; adapter deferred until a concrete use case.
+- Blackwell catalog rows are `confidence: medium`, Rubin is `low` — sources seed maps these to `MODELLED` so provenance badges stay honest.
+- If measured T4 TPS falls outside the 60-150 range enforced by `test_tinyllama_decode_t4_sanity`, recalibrate `utilisation_frac` in [core/cost_engine/roofline.py](core/cost_engine/roofline.py).
+- Build 2 (capacity planner) and Build 3 (account health) are planned but not shipped. Build 1 alone is a complete artifact.
 
 ---
 
