@@ -22,7 +22,7 @@ from typing import Any, Protocol
 
 from core.market_intel.schema import FactKind, MarketIntelDoc, MarketIntelFact
 
-DEFAULT_MODEL = "claude-haiku-4-5-20251001"
+DEFAULT_MODEL = "claude-haiku-5-5"
 DEFAULT_OPENAI_MODEL = "gpt-4o-mini"
 
 
