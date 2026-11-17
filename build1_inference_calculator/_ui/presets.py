@@ -33,8 +33,8 @@ LLAMA_70B_H100 = Scenario(
     key="llama_70b_h100",
     label="Llama-3-70B on 8× H100 (default)",
     description=(
-        "Llama-3-70B served on 8× H100 SXM 80GB at $2.49/GPU-hour, 60% busy. "
-        "The neocloud unit-economics demo."
+        "Llama-3-70B served on 8× H100 SXM 80GB at $3.06/GPU-hour "
+        "(Ornn index, Nov 2026), 60% busy. The neocloud unit-economics demo."
     ),
     gpu_id="h100_sxm5_80gb",
     model_name="Llama-3-70B",

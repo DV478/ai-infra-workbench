@@ -9,9 +9,9 @@ and in 30 seconds understand:
 
 Hero numbers below are hard-coded from a one-off run of ``compare_options`` for
 the default 70B scenario (Llama-3-70B on 8× H100 SXM 80GB, 60% busy,
-$2.49/GPU-hour neocloud). Locking the demo result means the landing page
-renders instantly, never drifts on an engine change, and can't fail if the
-cost engine throws.
+$3.06/GPU-hour neocloud — Ornn Compute Price Index settlement, 15 Nov 2026).
+Locking the demo result means the landing page renders instantly, never drifts
+on an engine change, and can't fail if the cost engine throws.
 """
 
 from __future__ import annotations
@@ -73,19 +73,20 @@ page_header(
 # ---------------------------------------------------------------------------
 st.markdown("## One worked example")
 st.caption(
-    "Llama-3-70B on 8× H100 SXM 80GB at 60% busy, neocloud at $2.49/GPU-hour, "
-    "3-year horizon. Same workload, five options, one ruler. Numbers below are "
-    "frozen outputs of the TCO engine — adjust inputs on the "
-    "**What does it cost** page."
+    "Llama-3-70B on 8× H100 SXM 80GB at 60% busy, neocloud at $3.06/GPU-hour "
+    "(Ornn Compute Price Index, 15 Nov 2026), 3-year horizon. Same workload, "
+    "five options, one ruler. Numbers below are frozen outputs of the TCO "
+    "engine — adjust inputs on the **What does it cost** page."
 )
 
-# Hard-coded result of compare_options(...) for the 70B/H100 scenario — see
-# module docstring. Re-run once a quarter and update if the engine drifts.
+# Hard-coded result of compare_options(...) for the 70B/H100 scenario at Nov
+# 2026 rates (reserved $3.20, on-demand $5.50, neocloud $3.06, API $0.88/M).
+# Re-run via core.cost_engine.tco.compare_options if the defaults change.
 _HERO_RESULTS: list[dict[str, float | str]] = [
-    {"label": "Owning",            "usd_per_m_tokens": 3.12, "total_3y_usd": 84_072},
-    {"label": "Reserved (3-year)", "usd_per_m_tokens": 2.73, "total_3y_usd": 73_584},
-    {"label": "On-demand cloud",   "usd_per_m_tokens": 4.39, "total_3y_usd": 118_260},
-    {"label": "Neocloud",          "usd_per_m_tokens": 2.43, "total_3y_usd": 65_437},
+    {"label": "Owning",            "usd_per_m_tokens": 3.13, "total_3y_usd": 84_495},
+    {"label": "Reserved (3-year)", "usd_per_m_tokens": 3.12, "total_3y_usd": 84_096},
+    {"label": "On-demand cloud",   "usd_per_m_tokens": 5.36, "total_3y_usd": 144_540},
+    {"label": "Neocloud",          "usd_per_m_tokens": 2.98, "total_3y_usd": 80_417},
     {"label": "Per-token API",     "usd_per_m_tokens": 2.64, "total_3y_usd": 71_175},
 ]
 _HERO_SCENARIO_LABEL = "Llama-3-70B · 8× H100 · 60% busy · 3-year horizon"
@@ -137,12 +138,14 @@ with verdict_col:
     st.markdown(
         "- Total 3-year spend: "
         f"**${int(_cheapest['total_3y_usd']):,}**\n"
-        f"- {badge('modelled')} TCO math, {badge('assumption')} hourly rates\n"
+        f"- {badge('modelled')} TCO math, {badge('assumption')} hourly rates "
+        "(Ornn index Nov 2026)\n"
         "- Tune any input on the **What does it cost** page"
     )
     st.caption(
-        "A 60% → 80% busy swing can flip the recommendation. "
-        "That's the point of the Advisor: ask it and see."
+        "At today's H100 rates the API beats renting at 60% busy. The real GTM "
+        "question for a neocloud: at what utilisation does rental cross back under? "
+        "Ask the Advisor."
     )
 
 # ---------------------------------------------------------------------------

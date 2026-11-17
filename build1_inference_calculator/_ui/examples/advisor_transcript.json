@@ -8,7 +8,7 @@
     },
     {
       "role": "assistant",
-      "text": "**TL;DR: Neocloud rental is cheapest at $2.43/M output tokens — 1.8× cheaper than on-demand hyperscaler, 7% cheaper than the per-token inference API.** Owning (3-year depreciation) runs at $3.12/M — 29% more than neocloud, so you'd only own if you had very steady > 70% utilisation plus a reason to keep the capex on-balance.\n\nWorkload sized at ~50 rps = ~2.5 B output tokens/year. All five options sit between $2.40 and $4.40 per million output tokens — not an order of magnitude apart, so the choice turns on operational preference (lock-in, latency SLO, who owns the ops burden) rather than raw $.",
+      "text": "**TL;DR: At Nov 2026 H100 rates, the per-token inference API wins at $2.64/M output tokens — 2.0× cheaper than on-demand hyperscaler, 13% cheaper than neocloud.** Owning (3y depreciation) and 3y reserved are essentially tied at ~$3.12/M, both well above the API.\n\nWorkload sized at ~50 rps = ~2.5 B output tokens/year. The real GTM question for a neocloud: at what utilisation does rental beat the API? Under this 60% busy scenario the API wins; above ~80% busy the neocloud cost per token flattens and the lock-in starts to make sense.\n\nPrices used: neocloud $3.06/hr (Ornn Compute Price Index, settled 15 Nov 2026), reserved $3.20/hr, on-demand $5.50/hr. All marked ⚪ assumption — tune on the *What does it cost* page.",
       "tool_calls": [
         {
           "name": "check_memory_fit",
@@ -17,19 +17,19 @@
         },
         {
           "name": "compare_tco",
-          "input": {"gpu_id": "h100_sxm5_80gb", "model": "llama_3_70b", "batch_size": 32, "busy_fraction": 0.60, "reserved_hourly": 2.80, "on_demand_hourly": 4.50, "neocloud_hourly": 2.49, "api_name": "Inference API", "api_output_price_per_m": 0.88},
+          "input": {"gpu_id": "h100_sxm5_80gb", "model": "llama_3_70b", "batch_size": 32, "busy_fraction": 0.60, "reserved_hourly": 3.20, "on_demand_hourly": 5.50, "neocloud_hourly": 3.06, "api_name": "Inference API", "api_output_price_per_m": 0.88},
           "result": {"options": [
-            {"name": "Owning (capex $32k, 3y)", "usd_per_m_output_tokens": 3.12, "total_3y_usd": 84072},
-            {"name": "Reserved 3y cloud", "usd_per_m_output_tokens": 2.73, "total_3y_usd": 73584},
-            {"name": "On-demand cloud", "usd_per_m_output_tokens": 4.39, "total_3y_usd": 118260},
-            {"name": "Neocloud (independent provider)", "usd_per_m_output_tokens": 2.43, "total_3y_usd": 65437},
+            {"name": "Owning (capex $32k, 3y)", "usd_per_m_output_tokens": 3.13, "total_3y_usd": 84495},
+            {"name": "Reserved 3y cloud", "usd_per_m_output_tokens": 3.12, "total_3y_usd": 84096},
+            {"name": "On-demand cloud", "usd_per_m_output_tokens": 5.36, "total_3y_usd": 144540},
+            {"name": "Neocloud (independent provider)", "usd_per_m_output_tokens": 2.98, "total_3y_usd": 80417},
             {"name": "Inference API", "usd_per_m_output_tokens": 2.64, "total_3y_usd": 71175}
           ]}
         },
         {
           "name": "compute_break_even",
-          "input": {"option_a": "owned", "option_b": "reserved", "busy_fraction_range": [0.3, 0.9]},
-          "result": {"pivot_variable": "busy_fraction", "pivot_value": 0.72, "option_a": "owned", "option_b": "reserved", "note": "Owning beats renting reserved once you're decoding more than 72% of the hours you pay for."}
+          "input": {"option_a": "neocloud", "option_b": "api", "busy_fraction_range": [0.3, 0.95]},
+          "result": {"pivot_variable": "busy_fraction", "pivot_value": 0.82, "option_a": "neocloud", "option_b": "api", "note": "Neocloud rental beats the per-token API once you're decoding more than ~82% of paid hours. Below that the API is cheaper. This is the question that matters for the neocloud sales call."}
         }
       ],
       "usage": {"prompt_tokens": 2480, "completion_tokens": 318, "prompt_tokens_details": {"cached_tokens": 1800}},

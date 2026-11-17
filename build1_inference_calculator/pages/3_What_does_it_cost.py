@@ -145,17 +145,23 @@ with st.expander("Tune the inputs", expanded=False):
                           help="Annual maintenance cost as a % of capex.")
 
     st.markdown("**Hourly rental rates (USD / GPU-hour)**")
+    st.caption(
+        "Defaults are H100 SXM rates calibrated to Nov 2026 market. "
+        "Neocloud $3.06 = Ornn Compute Price Index settlement, 15 Nov 2026. "
+        "Hyperscaler reserved / on-demand track broadly 1.05× / 1.80× the index. "
+        "Tune any input."
+    )
     c1, c2, c3 = st.columns(3)
     with c1:
-        reserved_h = st.number_input("Reserved 3y", 0.5, 20.0, 2.80, 0.10,
-                                     help="Hyperscaler 3-year reservation.")
+        reserved_h = st.number_input("Reserved 3y", 0.5, 20.0, 3.20, 0.10,
+                                     help="Hyperscaler 3-year reservation (~1.05× Ornn index Nov 2026).")
     with c2:
-        on_demand_h = st.number_input("On-demand", 0.5, 30.0, 4.50, 0.10,
-                                      help="Pay-as-you-go hyperscaler rate.")
+        on_demand_h = st.number_input("On-demand", 0.5, 30.0, 5.50, 0.10,
+                                      help="Pay-as-you-go hyperscaler rate (~1.80× Ornn index Nov 2026).")
     with c3:
         neocloud_h = st.number_input("Neocloud (independent provider)",
-                                     0.5, 20.0, 2.49, 0.10,
-                                     help="Specialist GPU cloud — typically cheapest.")
+                                     0.5, 20.0, 3.06, 0.10,
+                                     help="Ornn Compute Price Index for H100 SXM, settled 15 Nov 2026.")
 
     st.markdown("**Per-token API comparison**")
     c1, c2, c3, c4 = st.columns(4)
