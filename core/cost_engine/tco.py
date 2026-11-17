@@ -40,7 +40,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from core.cost_engine.kv_cache import ModelArch
-from core.cost_engine.roofline import decode_tps
+from core.cost_engine.roofline import decode_tps, prefill_tps
 from core.gpu_specs.catalog import GpuSpec
 
 HOURS_PER_YEAR = 8760
@@ -99,13 +99,31 @@ def output_tokens_per_hour(
     param_count_billions: float,
     *,
     batch_size: int = 32,
-    kv_seq_len: int = 640,
+    input_length: int = 512,
+    output_length: int = 256,
     dtype: str = "fp16",
     utilisation_frac: float = 0.65,
     busy_fraction: float = 0.60,
 ) -> float:
-    """Expected output tokens per hour of wall time for one GPU."""
-    res = decode_tps(
+    """Effective output tokens per hour of wall time for one GPU.
+
+    Splits GPU time between prefill and decode so the per-token cost that
+    ``compare_options`` derives from this agrees with ``cost_per_m_tokens``'s
+    ``realistic_total`` (decode cost + amortised prefill cost). Prior to the
+    F4 fix this divided by decode-only tokens, which under-counted the serving
+    cost by ~40% for a typical 512-in / 256-out workload and made every
+    owned/reserved/neocloud option look cheaper than it really is versus the
+    API (which includes input-token pricing on its side).
+
+    Per output token:
+      - decode: 1 / decode_tps seconds
+      - prefill (amortised): io_ratio / prefill_tps seconds
+    Effective tps = 1 / (sum). Then scale by hours and busy fraction.
+    """
+    io_ratio = input_length / output_length if output_length > 0 else 0.0
+    kv_seq_len = input_length + output_length // 2
+
+    decode = decode_tps(
         gpu,
         arch,
         param_count_billions,
@@ -114,7 +132,24 @@ def output_tokens_per_hour(
         dtype=dtype,
         utilisation_frac=utilisation_frac,
     )
-    return res.tokens_per_second * 3600 * busy_fraction
+    prefill = prefill_tps(
+        gpu,
+        arch,
+        param_count_billions,
+        batch_size=batch_size,
+        input_length=input_length,
+        dtype=dtype,
+        utilisation_frac=utilisation_frac,
+    )
+
+    if decode.tokens_per_second <= 0:
+        return 0.0
+    decode_sec_per_token = 1.0 / decode.tokens_per_second
+    prefill_sec_per_token = (
+        io_ratio / prefill.tokens_per_second if prefill.tokens_per_second > 0 else 0.0
+    )
+    effective_tps = 1.0 / (decode_sec_per_token + prefill_sec_per_token)
+    return effective_tps * 3600 * busy_fraction
 
 
 # ---------------------------------------------------------------------------
@@ -450,7 +485,8 @@ def compare_options(
         arch,
         param_count_billions,
         batch_size=batch_size,
-        kv_seq_len=input_length + output_length // 2,
+        input_length=input_length,
+        output_length=output_length,
         dtype=dtype,
         utilisation_frac=utilisation_frac,
         busy_fraction=busy_fraction,

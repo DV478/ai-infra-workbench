@@ -84,14 +84,16 @@ st.caption(
 )
 
 # Hard-coded result of compare_options(...) for the 70B/H100 scenario at Nov
-# 2026 rates (reserved $3.20, on-demand $5.50, neocloud $3.06, API $0.88/M).
-# Re-run via core.cost_engine.tco.compare_options if the defaults change.
+# 2026 rates (reserved $3.20, on-demand $5.50, neocloud $3.06, API $0.88/M in
+# and out). Numbers include prefill time amortised across output tokens (F4),
+# so they match cost_per_m_tokens_realistic. Re-run via
+# core.cost_engine.tco.compare_options if defaults change.
 _HERO_RESULTS: list[dict[str, float | str]] = [
-    {"label": "Owning",            "usd_per_m_tokens": 3.13, "total_3y_usd": 84_495},
-    {"label": "Reserved (3-year)", "usd_per_m_tokens": 3.12, "total_3y_usd": 84_096},
-    {"label": "On-demand cloud",   "usd_per_m_tokens": 5.36, "total_3y_usd": 144_540},
-    {"label": "Neocloud",          "usd_per_m_tokens": 2.98, "total_3y_usd": 80_417},
-    {"label": "Per-token API",     "usd_per_m_tokens": 2.64, "total_3y_usd": 71_175},
+    {"label": "Owning",            "usd_per_m_tokens": 3.78, "total_3y_usd": 84_495},
+    {"label": "Reserved (3-year)", "usd_per_m_tokens": 3.76, "total_3y_usd": 84_096},
+    {"label": "On-demand cloud",   "usd_per_m_tokens": 6.47, "total_3y_usd": 144_540},
+    {"label": "Neocloud",          "usd_per_m_tokens": 3.60, "total_3y_usd": 80_417},
+    {"label": "Per-token API",     "usd_per_m_tokens": 2.64, "total_3y_usd": 58_975},
 ]
 _HERO_SCENARIO_LABEL = "Llama-3-70B · 8× H100 · 60% busy · 3-year horizon"
 
@@ -147,9 +149,9 @@ with verdict_col:
         "- Tune any input on the **What does it cost** page"
     )
     st.caption(
-        "At today's H100 rates the API beats renting at 60% busy. The real GTM "
-        "question for a neocloud: at what utilisation does rental cross back under? "
-        "Ask the Advisor."
+        "At today's H100 rates the API beats renting by ~1.4× at 60% busy. The "
+        "real GTM question for a neocloud: at what utilisation does rental cross "
+        "back under? Ask the Advisor."
     )
 
 # ---------------------------------------------------------------------------

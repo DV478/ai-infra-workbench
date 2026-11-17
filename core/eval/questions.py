@@ -161,7 +161,7 @@ EVAL_QUESTIONS: list[EvalQuestion] = [
     # -----------------------------------------------------------------------
     EvalQuestion(
         id="tph_8b_h100",
-        question="How many Llama-3-8B FP16 output tokens per day can one H100 SXM5 produce at batch 32, 60% busy, 1024 KV?",
+        question="How many Llama-3-8B FP16 output tokens per day can one H100 SXM5 produce at batch 32, 60% busy, 512 input / 256 output tokens?",
         expected_tool="output_tokens_per_hour",
         expected_params={"gpu_id": "h100_sxm5_80gb", "model": "llama-3-8b", "batch_size": 32, "busy_fraction": 0.60},
         expected_numeric=("tokens_per_day", 50_000_000, 400_000_000),

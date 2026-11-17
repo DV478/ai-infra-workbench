@@ -246,13 +246,21 @@ def _tool_output_tokens_per_hour(
     gpu_id: str,
     model: str,
     batch_size: int = 32,
-    kv_seq_len: int = 1024,
+    input_length: int = 512,
+    output_length: int = 256,
     dtype: str = "fp16",
     busy_fraction: float = 0.60,
 ) -> dict:
     gpu = _resolve_gpu(gpu_id)
     arch, p = _resolve_model(model)
-    tph = output_tokens_per_hour(gpu, arch, p, batch_size=batch_size, kv_seq_len=kv_seq_len, dtype=dtype, busy_fraction=busy_fraction)
+    tph = output_tokens_per_hour(
+        gpu, arch, p,
+        batch_size=batch_size,
+        input_length=input_length,
+        output_length=output_length,
+        dtype=dtype,
+        busy_fraction=busy_fraction,
+    )
     tph_int = int(tph)
     return {"tokens_per_hour": tph_int, "tokens_per_day": tph_int * 24}
 
@@ -461,14 +469,15 @@ TOOL_SCHEMAS: list[dict] = [
     },
     {
         "name": "output_tokens_per_hour",
-        "description": "Expected output tokens per wall-clock hour for one GPU at a given busy fraction. Used to convert rps / demand into token volumes.",
+        "description": "Effective output tokens per wall-clock hour for one GPU at a given busy fraction, with prefill time amortised across output tokens. Use to convert rps / demand into token volumes.",
         "input_schema": {
             "type": "object",
             "properties": {
                 "gpu_id": _enum(_GPU_IDS),
                 "model": _enum(_MODEL_NAMES),
                 "batch_size": {"type": "integer", "default": 32},
-                "kv_seq_len": {"type": "integer", "default": 1024},
+                "input_length": {"type": "integer", "default": 512},
+                "output_length": {"type": "integer", "default": 256},
                 "dtype": _enum(["fp16", "fp8", "int8", "int4"]),
                 "busy_fraction": {"type": "number", "default": 0.60},
             },

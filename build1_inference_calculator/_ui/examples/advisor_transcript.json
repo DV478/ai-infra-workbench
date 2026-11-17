@@ -8,7 +8,7 @@
     },
     {
       "role": "assistant",
-      "text": "**TL;DR: At Nov 2026 H100 rates, the per-token inference API wins at $2.64/M output tokens — 2.0× cheaper than on-demand hyperscaler, 13% cheaper than neocloud.** Owning (3y depreciation) and 3y reserved are essentially tied at ~$3.12/M, both well above the API.\n\nWorkload sized at ~50 rps = ~2.5 B output tokens/year. The real GTM question for a neocloud: at what utilisation does rental beat the API? Under this 60% busy scenario the API wins; above ~80% busy the neocloud cost per token flattens and the lock-in starts to make sense.\n\nPrices used: neocloud $3.06/hr (Ornn Compute Price Index, settled 15 Nov 2026), reserved $3.20/hr, on-demand $5.50/hr. All marked ⚪ assumption — tune on the *What does it cost* page.",
+      "text": "**TL;DR: At Nov 2026 H100 rates with 512 input / 256 output tokens, the per-token inference API wins at $2.64/M output tokens — 2.45× cheaper than on-demand hyperscaler, 1.36× cheaper than neocloud ($3.60/M).** Owning (3y depreciation) and 3y reserved are essentially tied at ~$3.77/M, both well above the API.\n\nWorkload sized at ~50 rps. The GPU-based options include **prefill time amortised** into the output-token cost (F4 fix), so this comparison is fair against the API which already prices input tokens. The real GTM question for a neocloud: at what utilisation does rental beat the API? Under this 60% busy scenario the API wins; push busy higher or drop input-token share and neocloud crosses under.\n\nPrices used: neocloud $3.06/hr (Ornn Compute Price Index, settled 15 Nov 2026), reserved $3.20/hr, on-demand $5.50/hr. All marked ⚪ assumption — tune on the *What does it cost* page.",
       "tool_calls": [
         {
           "name": "check_memory_fit",
@@ -19,11 +19,11 @@
           "name": "compare_tco",
           "input": {"gpu_id": "h100_sxm5_80gb", "model": "llama_3_70b", "batch_size": 32, "busy_fraction": 0.60, "reserved_hourly": 3.20, "on_demand_hourly": 5.50, "neocloud_hourly": 3.06, "api_name": "Inference API", "api_output_price_per_m": 0.88},
           "result": {"options": [
-            {"name": "Owning (capex $32k, 3y)", "usd_per_m_output_tokens": 3.13, "total_3y_usd": 84495},
-            {"name": "Reserved 3y cloud", "usd_per_m_output_tokens": 3.12, "total_3y_usd": 84096},
-            {"name": "On-demand cloud", "usd_per_m_output_tokens": 5.36, "total_3y_usd": 144540},
-            {"name": "Neocloud (independent provider)", "usd_per_m_output_tokens": 2.98, "total_3y_usd": 80417},
-            {"name": "Inference API", "usd_per_m_output_tokens": 2.64, "total_3y_usd": 71175}
+            {"name": "Owning (capex $32k, 3y)", "usd_per_m_output_tokens": 3.78, "total_3y_usd": 84495},
+            {"name": "Reserved 3y cloud", "usd_per_m_output_tokens": 3.76, "total_3y_usd": 84096},
+            {"name": "On-demand cloud", "usd_per_m_output_tokens": 6.47, "total_3y_usd": 144540},
+            {"name": "Neocloud (independent provider)", "usd_per_m_output_tokens": 3.60, "total_3y_usd": 80417},
+            {"name": "Inference API", "usd_per_m_output_tokens": 2.64, "total_3y_usd": 58975}
           ]}
         },
         {

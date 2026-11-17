@@ -196,3 +196,55 @@ def test_70b_scenario_api_cheaper_at_low_demand():
     by_option = {r.option: r for r in scenario.results}
     # API should beat owned at 20% busy_fraction (lots of stranded capex)
     assert by_option["api"].usd_per_m_tokens < by_option["owned"].usd_per_m_tokens
+
+
+# ---------- F4 parity: compare_options agrees with cost_per_m_tokens ------
+
+
+def test_compare_options_agrees_with_cost_per_m_tokens():
+    """F4 regression: the two cost-per-M-token definitions must agree within 1%.
+
+    The Fable review found compare_options divided by decode-only tokens while
+    cost_per_m_tokens added prefill time — a 41% gap on the same scenario.
+    After the F4 fix, output_tokens_per_hour amortises prefill so both paths
+    land on the same number. This test guards against reintroducing the drift.
+    """
+    from core.cost_engine.token_cost import cost_per_m_tokens
+
+    cat = load_catalog()
+    h100 = cat.by_id("h100_sxm5_80gb")
+
+    # Scenario matching the TCO page defaults post-F8.
+    hourly = 3.06
+    scenario = compare_options(
+        h100, LLAMA3_70B, 70.0,
+        owned_econ=_baseline_econ(),
+        reserved_hourly=3.20,
+        on_demand_hourly=5.50,
+        neocloud_hourly=hourly,
+        api_name="API", api_output_price_per_m=0.88, api_input_price_per_m=0.88,
+        batch_size=32, input_length=512, output_length=256,
+        dtype="fp16", utilisation_frac=0.65, busy_fraction=0.60,
+    )
+
+    tc = cost_per_m_tokens(
+        h100, LLAMA3_70B, 70.0, hourly,
+        batch_size=32, input_length=512, output_length=256,
+        dtype="fp16", utilisation_frac=0.65, busy_fraction=0.60,
+    )
+
+    neocloud = next(r for r in scenario.results if r.option == "neocloud")
+    assert neocloud.usd_per_m_tokens == pytest.approx(
+        tc.cost_per_m_tokens_realistic, rel=0.01
+    ), (
+        f"compare_options neocloud ${neocloud.usd_per_m_tokens:.4f}/M diverges "
+        f"from cost_per_m_tokens_realistic ${tc.cost_per_m_tokens_realistic:.4f}/M "
+        "— F4 unification has drifted."
+    )
+
+    # The decode-only shortcut used to produce a materially lower number.
+    # If someone reintroduces it, this canary will catch it.
+    assert neocloud.usd_per_m_tokens > tc.cost_per_m_tokens_peak * 1.5, (
+        "Suspicious: compare_options matches the decode-only 'peak' cost, "
+        "which means prefill amortisation is missing again (F4 regression)."
+    )
