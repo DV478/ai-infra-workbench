@@ -33,7 +33,14 @@ from _ui.page_header import page_header  # noqa: E402
 from _ui.presets import SCENARIOS, preset_chips, scenario_default  # noqa: E402
 from _ui.provenance import badge  # noqa: E402
 
-from core.cost_engine.kv_cache import LLAMA3_8B, LLAMA3_70B, QWEN2_5_3B  # noqa: E402
+from core.cost_engine.kv_cache import (  # noqa: E402
+    LLAMA3_8B,
+    LLAMA3_70B,
+    QWEN2_5_3B,
+    fits_in_memory,
+    kv_cache_bytes,
+    weights_bytes,
+)
 from core.cost_engine.tco import (  # noqa: E402
     OwnedEconomics,
     compare_options,
@@ -213,6 +220,47 @@ scenario = compare_options(
     utilisation_frac=float(util),
     busy_fraction=float(busy),
 )
+
+# ---------------------------------------------------------------------------
+# Fit check — does the model+KV+activations fit in one GPU's memory?
+# The TCO math below is per-GPU. If the model doesn't fit on a single GPU,
+# the user is implicitly committing to tensor-parallel across multiple GPUs
+# — a cluster-scaling choice this page does NOT currently model (see E6).
+# ---------------------------------------------------------------------------
+_DEFAULT_SERVING_DTYPE = "fp16"  # production assumption until an FP8 selector lands in E6
+_weight_gb = weights_bytes(param_b, dtype=_DEFAULT_SERVING_DTYPE) / 1e9
+_kv_gb = kv_cache_bytes(arch, batch_size=int(batch),
+                        sequence_length=int(in_len) + int(out_len)) / 1e9
+_fits, _headroom_gb = fits_in_memory(_weight_gb, _kv_gb, float(gpu.memory_gb))
+
+if not _fits:
+    _weight_fp8_gb = weights_bytes(param_b, dtype="fp8") / 1e9
+    _fits_fp8, _headroom_fp8 = fits_in_memory(_weight_fp8_gb, _kv_gb, float(gpu.memory_gb))
+    _gpus_needed_fp16 = max(1, int((_weight_gb + _kv_gb + 2.0) // float(gpu.memory_gb)) + 1)
+    _fp8_msg = (
+        f"FP8 quantisation drops weights to {_weight_fp8_gb:.0f} GB "
+        f"({'fits on 1 GPU' if _fits_fp8 else f'{-_headroom_fp8:.0f} GB short — still needs multi-GPU'})."
+    )
+    st.error(
+        f"⚠️ **Memory-fit failure.** {model_name} at FP16 needs "
+        f"{_weight_gb + _kv_gb + 2.0:.0f} GB (weights {_weight_gb:.0f} + KV cache "
+        f"{_kv_gb:.1f} + ~2 activation) but {gpu.name} has only "
+        f"{gpu.memory_gb:.0f} GB — short by {-_headroom_gb:.0f} GB.\n\n"
+        f"To actually serve this workload you would need **~{_gpus_needed_fp16}× "
+        f"{gpu.name}** in tensor-parallel, OR lower precision. {_fp8_msg}\n\n"
+        "The TCO figures below are **per-GPU math** — they ignore the "
+        "cluster-scaling cost of running multi-GPU TP. Treat them as the "
+        "*per-tenant* cost you would see on a cluster where the memory-fit "
+        "problem is already solved. Cluster-scaling and an FP8 selector land in "
+        "the E6 enhancement."
+    )
+else:
+    st.success(
+        f"✅ Memory fit on 1 × {gpu.name}: "
+        f"weights {_weight_gb:.0f} GB + KV {_kv_gb:.1f} GB "
+        f"= {_weight_gb + _kv_gb + 2.0:.1f} GB used, "
+        f"{_headroom_gb:.0f} GB headroom. Single-GPU TCO is a true cluster cost."
+    )
 
 results = scenario.results
 cheapest = min(results, key=lambda r: r.usd_per_m_tokens)

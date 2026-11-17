@@ -8,8 +8,11 @@ and in 30 seconds understand:
     4. One worked result above the fold, no clicks required
 
 Hero numbers below are hard-coded from a one-off run of ``compare_options`` for
-the default 70B scenario (Llama-3-70B on 8× H100 SXM 80GB, 60% busy,
+the default 70B scenario (Llama-3-70B on H100 SXM 80GB, 60% busy,
 $3.06/GPU-hour neocloud — Ornn Compute Price Index settlement, 15 Nov 2026).
+Figures are **per-GPU math**: 70B does not fit on 1× H100 at FP16, so a real
+serving deployment needs tensor-parallel across 2+ GPUs. The TCO page carries
+a fit-check warning when this trips. Cluster-scaling lands in the E6 enhancement.
 Locking the demo result means the landing page renders instantly, never drifts
 on an engine change, and can't fail if the cost engine throws.
 """
@@ -73,10 +76,11 @@ page_header(
 # ---------------------------------------------------------------------------
 st.markdown("## One worked example")
 st.caption(
-    "Llama-3-70B on 8× H100 SXM 80GB at 60% busy, neocloud at $3.06/GPU-hour "
-    "(Ornn Compute Price Index, 15 Nov 2026), 3-year horizon. Same workload, "
-    "five options, one ruler. Numbers below are frozen outputs of the TCO "
-    "engine — adjust inputs on the **What does it cost** page."
+    "Llama-3-70B on H100 SXM 80GB at 60% busy, neocloud at $3.06/GPU-hour "
+    "(Ornn Compute Price Index, 15 Nov 2026), 3-year horizon. "
+    "**Per-GPU math** — 70B doesn't fit on 1 H100, so this is the per-tenant "
+    "cost on a tensor-parallel cluster (see fit-check on the TCO page). "
+    "Same workload, five options, one ruler."
 )
 
 # Hard-coded result of compare_options(...) for the 70B/H100 scenario at Nov

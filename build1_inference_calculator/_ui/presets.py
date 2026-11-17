@@ -29,12 +29,17 @@ class Scenario:
 
 
 # Headline + two alternatives. Default = 70B on H100 neocloud unit-economics angle.
+# 70B does NOT fit on a single H100 80GB — the TCO page math is per-GPU, so this
+# scenario is "per-tenant cost on an H100 cluster where the memory-fit is solved
+# by tensor-parallel across multiple GPUs". A real serving deployment needs 2×
+# H100 at FP8 or 8× H100 at FP16; cluster-scaling lands in E6.
 LLAMA_70B_H100 = Scenario(
     key="llama_70b_h100",
-    label="Llama-3-70B on 8× H100 (default)",
+    label="Llama-3-70B on H100 SXM (default)",
     description=(
-        "Llama-3-70B served on 8× H100 SXM 80GB at $3.06/GPU-hour "
-        "(Ornn index, Nov 2026), 60% busy. The neocloud unit-economics demo."
+        "Llama-3-70B served on H100 SXM 80GB at $3.06/GPU-hour (Ornn index, "
+        "Nov 2026), 60% busy. Per-GPU TCO math — 70B does not fit on 1 H100, "
+        "so this models the per-tenant cost on a tensor-parallel cluster."
     ),
     gpu_id="h100_sxm5_80gb",
     model_name="Llama-3-70B",
