@@ -87,7 +87,9 @@ def test_compare_options_structure():
     })
     assert len(r["options"]) == 5
     assert len(r["stress"]) == 5
-    assert len(r["break_evens"]) == 2
+    # F5: compare_options returns 4 break-evens (owned-vs-reserved,
+    # neocloud-vs-API, reserved-vs-API, and the hourly-rate break-even).
+    assert len(r["break_evens"]) == 4
     options = {o["option"] for o in r["options"]}
     assert options == {"owned", "reserved", "on_demand", "neocloud", "api"}
 

@@ -212,10 +212,36 @@ def break_even_sentence(be) -> str:  # noqa: ANN001 — duck-typed BreakEven
     pct = f"{be.pivot_value * 100:.0f}%"
     a = _label(be.option_a)
     b = _label(be.option_b)
+
+    # busy_fraction: owned-vs-rented hourly-cost comparison.
+    if be.pivot_variable == "busy_fraction":
+        if be.pivot_value > 1.0:
+            return (
+                f"**{b} always beats {a}** at this hourly rate — owning never "
+                f"catches up at any realistic busy fraction (crossover would "
+                f"need busy = {be.pivot_value:.2f})."
+            )
+        if be.pivot_value < 0.0:
+            return f"{a} beats {b} at every busy fraction (hourly cost is already lower)."
+        return (
+            f"{a} beats {b} once you're decoding more than {pct} of the hours "
+            "you pay for."
+        )
+
+    # busy_fraction_vs_api: rental-vs-API per-M comparison.
+    if be.pivot_variable == "busy_fraction_vs_api":
+        if be.pivot_value > 1.0:
+            return (
+                f"**API always beats {a}** at this hourly rate — rental per-M "
+                f"would need busy = {be.pivot_value:.2f} (above 100%) to match "
+                "the API. Either drop the hourly or go API."
+            )
+        return (
+            f"**{a} beats the API once you keep the GPU above {pct} busy.** "
+            "Below that, the API is cheaper per token."
+        )
+
     templates: dict[str, str] = {
-        "busy_fraction": (
-            f"{a} beats {b} once you're decoding more than {pct} of the hours you pay for."
-        ),
         "utilisation_frac": f"{a} beats {b} once sustained kernel utilisation stays above {pct}.",
         "hourly_usd": (
             f"{a} ties {b} at a rental rate of ${be.pivot_value:.2f}/GPU-hour."

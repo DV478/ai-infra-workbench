@@ -297,17 +297,16 @@ def break_even_busy_fraction(
 ) -> BreakEven:
     """Busy fraction above which owning beats renting at the given hourly rate.
 
-    The *hourly* cost comparison is independent of busy fraction — if owning
-    is cheaper per hour than renting, it is cheaper at any utilisation.
-    Busy fraction matters for the *per-token* comparison because owned
-    carries fixed costs that still accrue when the GPU is idle. We return
-    the busy fraction at which the per-token costs converge, assuming the
-    rented hourly rate scales linearly with busy time (it does not — you
-    pay for the reservation anyway — but this is the floor comparison).
+    This compares the fixed hourly cost of owning (depreciation + power + hosting
+    + financing + maintenance) to a rented hourly. When owned_hourly is cheaper
+    than rented, owning beats renting on $/M-tokens at any busy fraction (the
+    crossover is < 0). When owned_hourly is dearer than rented, the ratio tells
+    you the busy fraction above which owning catches up — if that ratio exceeds
+    1.0, owning never wins at any realistic utilisation (prior to F5 this was
+    silently clamped to 1.0, masking the signal).
 
-    The useful intuition: at the crossover busy fraction, owned $/M tokens
-    equals rented $/M tokens. Below it, rented is cheaper per token even
-    though hourly rented may be more expensive.
+    This is an owned-vs-reserved comparison only. For the neocloud-vs-API
+    question that actually drives GTM decisions, use ``break_even_busy_vs_api``.
     """
     owned_hourly = owned_hourly_cost(econ)
     if rented_hourly_usd <= 0:
@@ -319,17 +318,93 @@ def break_even_busy_fraction(
             note="Rented hourly is zero — owned never breaks even.",
         )
     ratio = owned_hourly / rented_hourly_usd
+    if ratio > 1.0:
+        note = (
+            f"Owned hourly ${owned_hourly:.3f} > rented ${rented_hourly_usd:.3f}. "
+            f"Ratio {ratio:.2f} > 1.0 → owning never beats renting at any realistic "
+            "busy fraction. Rent instead."
+        )
+    elif ratio < 0.0:
+        note = (
+            f"Owned hourly ${owned_hourly:.3f} < 0 (unusual). Treating as 'owning "
+            "always wins'."
+        )
+    else:
+        note = (
+            f"Owned hourly ${owned_hourly:.3f} vs rented ${rented_hourly_usd:.3f}. "
+            f"Owning beats renting on $/M-tokens once busy_fraction >= {ratio:.2f} "
+            "(assumes rented scales linearly with busy time — true for on-demand, "
+            "not for pre-paid reserved)."
+        )
     return BreakEven(
         option_a="owned",
         option_b="reserved",
         pivot_variable="busy_fraction",
-        pivot_value=min(1.0, max(0.0, ratio)),
-        note=(
-            f"Owned hourly ${owned_hourly:.3f} vs rented ${rented_hourly_usd:.3f}. "
-            f"Owning is cheaper on a $/token basis once busy_fraction >= {ratio:.2f} "
-            "(and assumes rented is only paid for time used, which is only true for "
-            "on-demand — reserved pays regardless)."
-        ),
+        pivot_value=ratio,  # unclamped — > 1.0 is a meaningful signal
+        note=note,
+    )
+
+
+def break_even_busy_vs_api(
+    rental_hourly_usd: float,
+    tokens_per_hour_at_100_busy: float,
+    api_blended_price_per_m: float,
+    *,
+    option_a: Option = "neocloud",
+) -> BreakEven:
+    """Busy fraction at which rental $/M-output-tokens equals per-token API $/M.
+
+    This is the question the Fable review called out as the single most useful
+    one for a neocloud GTM pitch: "at today's H100 rate, what utilisation does
+    a customer need before renting from us beats a per-token API?"
+
+    Math:
+        rental_per_m(busy) = rental_hourly * 1e6 / (tokens_per_hour_at_100 * busy)
+        Set equal to api_per_m and solve for busy:
+        busy_breakeven = rental_hourly * 1e6 / (tokens_per_hour_at_100 * api_per_m)
+
+    Returned pivot_value is unclamped. If > 1.0, the rental hourly can never
+    beat the API at this throughput — the API wins at every utilisation. If
+    < 0, inputs are nonsensical.
+    """
+    if api_blended_price_per_m <= 0:
+        raise ValueError(
+            f"api_blended_price_per_m must be > 0, got {api_blended_price_per_m}"
+        )
+    if tokens_per_hour_at_100_busy <= 0:
+        return BreakEven(
+            option_a=option_a,
+            option_b="api",
+            pivot_variable="busy_fraction_vs_api",
+            pivot_value=float("inf"),
+            note=(
+                "Zero tokens-per-hour at 100% busy — rental can never match API. "
+                "Check that the GPU + model + precision scenario is valid."
+            ),
+        )
+    busy = (rental_hourly_usd * 1_000_000) / (
+        tokens_per_hour_at_100_busy * api_blended_price_per_m
+    )
+    if busy > 1.0:
+        note = (
+            f"At ${rental_hourly_usd:.2f}/hr and {int(tokens_per_hour_at_100_busy):,} "
+            f"output tokens/hour at 100% busy, rental per-M would need busy_fraction "
+            f"= {busy:.2f} to match the API at ${api_blended_price_per_m:.2f}/M "
+            "— above 100% is impossible. API wins at every utilisation."
+        )
+    else:
+        note = (
+            f"At ${rental_hourly_usd:.2f}/hr and {int(tokens_per_hour_at_100_busy):,} "
+            f"output tokens/hour at 100% busy, rental per-M matches the "
+            f"${api_blended_price_per_m:.2f}/M API at busy_fraction = {busy:.2f}. "
+            "Below that the API is cheaper; above it rental wins."
+        )
+    return BreakEven(
+        option_a=option_a,
+        option_b="api",
+        pivot_variable="busy_fraction_vs_api",
+        pivot_value=busy,
+        note=note,
     )
 
 
@@ -518,9 +593,26 @@ def compare_options(
 
     results = [owned, reserved, on_demand, neocloud, api]
     stress = [demand_stress(r, demand_stress_multiplier) for r in results]
+
+    # Tokens-per-hour at 100% busy, for the per-M busy-vs-API break-evens.
+    tokens_per_hour_full = (
+        tokens_per_hour / busy_fraction if busy_fraction > 0 else tokens_per_hour
+    )
+    # Blended API $/M (input + output pricing baked in) — matches api.usd_per_m_tokens.
+    api_blended = api.usd_per_m_tokens
     break_evens = [
+        # Owned vs reserved — hourly-cost comparison, now unclamped.
         break_even_busy_fraction(owned_econ, reserved_hourly),
-        break_even_hourly_rate(api_output_price_per_m, tokens_per_hour),
+        # Neocloud vs API — the question that matters for a neocloud GTM pitch.
+        break_even_busy_vs_api(
+            neocloud_hourly, tokens_per_hour_full, api_blended, option_a="neocloud"
+        ),
+        # Reserved vs API — the equivalent question for a hyperscaler sales motion.
+        break_even_busy_vs_api(
+            reserved_hourly, tokens_per_hour_full, api_blended, option_a="reserved"
+        ),
+        # Rental hourly at which neocloud ties the API at current busy_fraction.
+        break_even_hourly_rate(api_blended, tokens_per_hour),
     ]
 
     return TcoScenario(

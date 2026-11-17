@@ -171,7 +171,9 @@ def test_compare_options_returns_five_results():
     options = {r.option for r in scenario.results}
     assert options == {"owned", "reserved", "on_demand", "neocloud", "api"}
     assert len(scenario.stress) == 5
-    assert len(scenario.break_evens) == 2
+    # F5: compare_options returns 4 break-evens (owned-vs-reserved,
+    # neocloud-vs-API, reserved-vs-API, and the hourly-rate break-even).
+    assert len(scenario.break_evens) == 4
 
 
 def test_70b_scenario_api_cheaper_at_low_demand():

@@ -25,7 +25,7 @@ Spec requirement: each build has a short "how to tell this in an interview" note
 "I modelled the full cost stack for serving open-weight LLMs — from HBM bandwidth and KV cache, through roofline throughput, to 3-year build-vs-rent-vs-API decisions. I'm especially interested in how model labs think about capacity commitments vs on-demand headroom."
 
 **The number that proves you did the work**
-Same as above, framed around the owner-vs-reserved break-even: "At X capex, Y hourly reserved rate, Z busy fraction, the model says owning beats reserving at 42% utilisation — which means if your demand forecast confidence interval straddles that line, neither is the right answer and you want burstable capacity."
+Framed around the break-even the model actually computes at Nov 2026 hyperscaler reserved rates ($3.20/GPU-hour for H100): "At $32k per-GPU capex plus baseline opex, owned and 3-year reserved land within pennies per hour — the TCO page shows owned at $3.78/M output tokens, reserved at $3.76/M. The decision flips on your actual capex (large procurement volumes make owning materially cheaper) and on whether you want the operational burden of running the facilities yourself. Where the break-even really matters is renting versus the per-token API — the TCO page prints that too, and for a 70B workload at $0.88/M API it lands at ~82% busy before neocloud rental starts to win."
 
 **Why they care**
 - They need people who can translate forecast demand → GPU-hours → procurement decisions without needing to ask engineering twice.

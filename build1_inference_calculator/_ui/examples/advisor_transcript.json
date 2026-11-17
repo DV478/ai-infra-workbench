@@ -29,7 +29,7 @@
         {
           "name": "compute_break_even",
           "input": {"option_a": "neocloud", "option_b": "api", "busy_fraction_range": [0.3, 0.95]},
-          "result": {"pivot_variable": "busy_fraction", "pivot_value": 0.82, "option_a": "neocloud", "option_b": "api", "note": "Neocloud rental beats the per-token API once you're decoding more than ~82% of paid hours. Below that the API is cheaper. This is the question that matters for the neocloud sales call."}
+          "result": {"pivot_variable": "busy_fraction_vs_api", "pivot_value": 0.82, "option_a": "neocloud", "option_b": "api", "note": "At $3.06/hr and ~1.42M output tokens/hour at 100% busy, neocloud rental per-M matches the $2.64/M API at busy_fraction = 0.82. Below that the API is cheaper; above it neocloud wins. This is the question that matters for the neocloud sales call."}
         }
       ],
       "usage": {"prompt_tokens": 2480, "completion_tokens": 318, "prompt_tokens_details": {"cached_tokens": 1800}},
