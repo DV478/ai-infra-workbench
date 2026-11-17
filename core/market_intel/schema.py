@@ -62,7 +62,7 @@ class MarketIntelFact(BaseModel):
     fact_id: str = Field(default_factory=_new_id)
     doc_id: str
     fact_kind: FactKind
-    subject: str                          # 'H100 SXM5', 'Nscale UK capex', etc.
+    subject: str                          # 'H100 SXM5', 'UK datacenter capex', etc.
     value_num: float | None = None
     value_unit: str | None = None         # 'usd_per_hour', 'usd', 'units', 'mw', 'sq_ft'
     value_text: str | None = None         # free-text value if non-numeric

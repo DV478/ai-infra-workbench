@@ -51,13 +51,16 @@ STORE_PATH = ROOT / "data" / "market_intel.duckdb"
 st.title("Market prices")
 
 page_header(
-    what="Live prices and capex figures extracted from AI-infra press releases, "
-         "earnings transcripts, and news.",
-    why="Every row backs a TCO assumption. 'Neocloud at $2.49/hr' isn't a guess "
-        "if there's a dated quote for it.",
+    what="Structured facts (GPU prices, capex, capacity, shipments) extracted from "
+         "example press releases, earnings transcripts, and news — each row carries "
+         "the verbatim source sentence it was pulled from.",
+    why="Every row is a candidate backing for a TCO assumption. The demo corpus ships "
+        "with **fictional company names** (NorthCloud, Vertex-GPU, Pulsar Compute, "
+        "etc.) so this page carries no fabricated claims about real employers. Swap in "
+        "real sourced documents in `data/raw/market/` to produce production facts.",
     start="Filter by fact kind or company. Click a row for the exact source quote.",
-    numbers="One row = one extracted fact. Each carries the verbatim sentence "
-            "it was pulled from.",
+    numbers="One row = one extracted fact. The quote must appear verbatim in the "
+            "source body or the fact is dropped.",
 )
 
 # ---------------------------------------------------------------------------
@@ -123,18 +126,24 @@ def _fake_callback(doc: MarketIntelDoc) -> list[dict]:
 
 @st.cache_resource
 def _cold_start_populate(_raw_dir: Path, _store_path: Path) -> bool:
-    """Run the fake extractor over the committed demo corpus if the DB is missing.
+    """Run the fake extractor over the committed demo corpus if the DB is
+    missing OR any raw file has been modified since the DB was built.
 
-    Cached with ``st.cache_resource`` so we only do it once per server lifetime.
-    Returns True if we populated the DB; False if it already existed.
+    Rebuild-on-stale covers Streamlit Cloud redeploys where ``market_intel.duckdb``
+    may persist on the container even after corpus files change.
     """
-    if _store_path.exists():
-        return False
     if not _raw_dir.exists():
         return False
     raw_files = sorted(_raw_dir.glob("*.txt")) + sorted(_raw_dir.glob("*.md"))
     if not raw_files:
         return False
+
+    newest_raw_mtime = max(p.stat().st_mtime for p in raw_files)
+    if _store_path.exists():
+        if _store_path.stat().st_mtime >= newest_raw_mtime:
+            return False
+        # Stale — rebuild from scratch.
+        _store_path.unlink()
 
     _store_path.parent.mkdir(parents=True, exist_ok=True)
     store = MarketIntelStore(_store_path)
@@ -420,8 +429,9 @@ with st.expander("Methodology"):
   there, the fact fails verification and isn't stored.
 - **Gold evaluation.** 12-case gold set in `core/market_intel/eval.py`. Baseline
   fake-extractor pass rate: 4/12 (33%, 50% recall). Real-LLM runs land ~70%+.
-- **Corpus.** 8 synthetic documents under `data/raw/market/` tagged inline as
-  `[SYNTHETIC — demo corpus]`. Replace with real press releases, transcripts,
-  and news filings to produce production facts.
+- **Corpus.** 7 synthetic documents under `data/raw/market/` using fictional
+  company names (NorthCloud, Vertex-GPU, Pulsar Compute, Ember Compute, Orion
+  Labs, Hyperion AI). Every file is tagged `[SYNTHETIC — demo corpus]` at line
+  1. Swap in real sourced documents to produce production facts.
         """
     )

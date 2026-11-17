@@ -9,8 +9,8 @@ source body?).
 A case specifies the minimum facts the extractor must emit from a doc.
 Matching is deliberately loose on strings — `subject_keyword` is a
 case-insensitive substring — and tight on numbers (±10% by default).
-This matches how a human reviewer judges: "a capex fact about Nscale
-Glasgow for roughly $2.5B" is a match for "Nscale Glasgow datacenter —
+This matches how a human reviewer judges: "a capex fact about Pulsar
+Glasgow for roughly $2.5B" is a match for "Pulsar Glasgow datacenter —
 $2.5 billion", even if the subject strings differ.
 
 Pass criterion: recall ≥ 70% AND quote-validity = 100%. False positives
@@ -186,17 +186,17 @@ GOLD_CASES: list[EvalCase] = [
         doc=_doc(
             doc_id="gold-01",
             doc_type="press_release",
-            title="Nscale commits $2.5B to Glasgow",
+            title="Pulsar Compute commits $2.5B to Glasgow",
             body=(
-                "Nscale announced today that it has committed $2.5 billion to build a new AI "
+                "Pulsar Compute announced today that it has committed $2.5 billion to build a new AI "
                 "datacenter in Glasgow, Scotland. The facility will reach 300 MW of IT load "
                 "by the end of 2027."
             ),
-            company="nscale",
+            company="pulsar",
             published_date="2026-10-14",
         ),
         expected=[
-            ExpectedFact(FactKind.CAPEX, "nscale", value_num=2_500_000_000, value_unit="usd"),
+            ExpectedFact(FactKind.CAPEX, "pulsar", value_num=2_500_000_000, value_unit="usd"),
             ExpectedFact(FactKind.CAPACITY, "glasgow", value_num=300, value_unit="mw"),
         ],
         notes="Baseline: one capex and one capacity in a clean paragraph.",
@@ -206,13 +206,13 @@ GOLD_CASES: list[EvalCase] = [
         doc=_doc(
             doc_id="gold-02",
             doc_type="press_release",
-            title="Nebius H200 availability",
+            title="Vertex-GPU H200 availability",
             body=(
-                "Nebius Group announced general availability of H200 SXM 141GB clusters. "
+                "Vertex-GPU announced general availability of H200 SXM 141GB clusters. "
                 "On-demand pricing is $3.49 per GPU-hour; 1-year reserved contracts start "
                 "at $2.19 per GPU-hour."
             ),
-            company="nebius",
+            company="vertex-gpu",
             published_date="2026-09-30",
         ),
         expected=[
@@ -244,16 +244,16 @@ GOLD_CASES: list[EvalCase] = [
         doc=_doc(
             doc_id="gold-04",
             doc_type="press_release",
-            title="CoreAI signs $800M compute deal with Nvidia",
+            title="CoreAI signs $800M compute deal with GPU vendor",
             body=(
                 "CoreAI announced an $800 million three-year compute supply agreement with "
-                "Nvidia covering 20,000 Blackwell B200 GPUs delivered through 2028."
+                "a major GPU vendor covering 20,000 Blackwell B200 GPUs delivered through 2028."
             ),
             company="coreai",
             published_date="2026-11-01",
         ),
         expected=[
-            ExpectedFact(FactKind.CONTRACT, "nvidia", value_num=800_000_000, value_unit="usd"),
+            ExpectedFact(FactKind.CONTRACT, "vendor", value_num=800_000_000, value_unit="usd"),
             ExpectedFact(FactKind.GPU_SHIPMENT, "b200", value_num=20_000, value_unit="units"),
         ],
         notes="Contract + shipment in one sentence; extractor should produce both kinds.",
@@ -288,12 +288,12 @@ GOLD_CASES: list[EvalCase] = [
         doc=_doc(
             doc_id="gold-06",
             doc_type="blog",
-            title="Rubin GA pushed to H1 2027",
+            title="Next-gen GPU GA pushed to H1 2027",
             body=(
-                "Nvidia confirmed Rubin GPUs will reach general availability in Q1 2027, "
+                "The GPU vendor confirmed Rubin-class GPUs will reach general availability in Q1 2027, "
                 "with sampling to select customers beginning December 2026."
             ),
-            company="nvidia",
+            company="gpu-vendor",
             published_date="2026-10-02",
         ),
         expected=[
@@ -375,18 +375,18 @@ GOLD_CASES: list[EvalCase] = [
         doc=_doc(
             doc_id="gold-10",
             doc_type="press_release",
-            title="Lambda signs $1.1B three-year compute deal with Microsoft",
+            title="Orion Labs signs $1.1B three-year compute deal with a hyperscaler",
             body=(
-                "Lambda today announced the execution of a $1.1 billion three-year compute supply agreement with Microsoft Corporation. "
-                "Under the terms of the agreement, Lambda will deliver dedicated capacity consisting of approximately 18,000 Nvidia H200 SXM GPUs and 6,000 Blackwell B200 GPUs, "
+                "Orion Labs today announced the execution of a $1.1 billion three-year compute supply agreement with a major hyperscaler customer. "
+                "Under the terms of the agreement, Orion Labs will deliver dedicated capacity consisting of approximately 18,000 H200 SXM GPUs and 6,000 Blackwell B200 GPUs, "
                 "with delivery staggered from Q1 2027 through Q4 2029.\n\n"
-                "Lambda's current public on-demand rate for H200 SXM 141GB instances is $3.29 per GPU-hour; reserved customers under this agreement will see materially discounted rates not disclosed publicly."
+                "Orion Labs' current public on-demand rate for H200 SXM 141GB instances is $3.29 per GPU-hour; reserved customers under this agreement will see materially discounted rates not disclosed publicly."
             ),
-            company="lambda",
+            company="orion-labs",
             published_date="2026-11-03",
         ),
         expected=[
-            ExpectedFact(FactKind.CONTRACT, "microsoft", value_num=1_100_000_000, value_unit="usd"),
+            ExpectedFact(FactKind.CONTRACT, "hyperscaler", value_num=1_100_000_000, value_unit="usd"),
             ExpectedFact(FactKind.GPU_SHIPMENT, "h200", value_num=18_000, value_unit="units"),
             ExpectedFact(FactKind.GPU_SHIPMENT, "b200", value_num=6_000, value_unit="units"),
             ExpectedFact(FactKind.GPU_PRICE, "h200", value_num=3.29, value_unit="usd_per_hour"),
@@ -398,15 +398,15 @@ GOLD_CASES: list[EvalCase] = [
         doc=_doc(
             doc_id="gold-11",
             doc_type="news",
-            title="Together AI cuts Llama-3-70B inference price",
+            title="Hyperion AI cuts Llama-3-70B inference price",
             body=(
-                "Together AI announced a 40 percent price reduction on its Llama-3-70B inference API, "
+                "Hyperion AI announced a 40 percent price reduction on its Llama-3-70B inference API, "
                 "lowering the output token rate from $1.00 to $0.60 per million tokens effective immediately. "
                 "Input tokens drop from $0.30 to $0.18 per million. The company cited cost improvements from "
                 "its latest H200 fleet upgrade and software stack optimisations. "
                 "Some industry observers believe further rounds of price cuts are inevitable as hyperscalers bring Blackwell capacity online."
             ),
-            company="together",
+            company="hyperion-ai",
             published_date="2026-10-20",
         ),
         expected=[],
@@ -421,15 +421,15 @@ GOLD_CASES: list[EvalCase] = [
         doc=_doc(
             doc_id="gold-12",
             doc_type="investor_day",
-            title="Nvidia Investor Day — Blackwell Ultra and Rubin update",
+            title="GPU vendor Investor Day — Blackwell Ultra and Rubin update",
             body=(
-                "Nvidia today provided an updated product roadmap:\n\n"
+                "The GPU vendor today provided an updated product roadmap:\n\n"
                 "- Blackwell B200 is in full production, with Q3 2026 shipments of approximately 420,000 units across hyperscaler and neocloud customers.\n"
                 "- Blackwell Ultra B300 is on track for general availability in Q2 2027, with initial sampling to lead customers beginning January 2027.\n"
                 "- Rubin will ship in volume in H1 2028, two quarters later than previously indicated.\n\n"
-                "Data center revenue grew 68 percent year over year. Nvidia confirmed it has booked approximately $42 billion of data center revenue in the fiscal quarter."
+                "Data center revenue grew 68 percent year over year. The vendor confirmed it has booked approximately $42 billion of data center revenue in the fiscal quarter."
             ),
-            company="nvidia",
+            company="gpu-vendor",
             published_date="2026-10-05",
         ),
         expected=[

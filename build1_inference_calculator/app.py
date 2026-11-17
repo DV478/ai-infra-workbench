@@ -8,7 +8,7 @@ and in 30 seconds understand:
     4. One worked result above the fold, no clicks required
 
 Hero numbers below are hard-coded from a one-off run of ``compare_options`` for
-the default Nscale scenario (Llama-3-70B on 8× H100 SXM 80GB, 60% busy,
+the default 70B scenario (Llama-3-70B on 8× H100 SXM 80GB, 60% busy,
 $2.49/GPU-hour neocloud). Locking the demo result means the landing page
 renders instantly, never drifts on an engine change, and can't fail if the
 cost engine throws.
@@ -79,7 +79,7 @@ st.caption(
     "**What does it cost** page."
 )
 
-# Hard-coded result of compare_options(...) for the Nscale scenario — see
+# Hard-coded result of compare_options(...) for the 70B/H100 scenario — see
 # module docstring. Re-run once a quarter and update if the engine drifts.
 _HERO_RESULTS: list[dict[str, float | str]] = [
     {"label": "Owning",            "usd_per_m_tokens": 3.12, "total_3y_usd": 84_072},

@@ -124,7 +124,7 @@ EVAL_QUESTIONS: list[EvalQuestion] = [
     # -----------------------------------------------------------------------
     EvalQuestion(
         id="compare_70b_default",
-        question="For Llama-3-70B FP8 on H100 SXM5, compare owning (capex $32k), 3y reserved at $2.50/hr, on-demand $4.50/hr, neocloud $2.00/hr and Together AI at $0.90/M output / $0.90/M input. Batch 32, 60% busy, 512 in / 256 out.",
+        question="For Llama-3-70B FP8 on H100 SXM5, compare owning (capex $32k), 3y reserved at $2.50/hr, on-demand $4.50/hr, neocloud $2.00/hr and an inference API at $0.90/M output / $0.90/M input. Batch 32, 60% busy, 512 in / 256 out.",
         expected_tool="compare_options",
         expected_params={"gpu_id": "h100_sxm5_80gb", "model": "llama-3-70b", "dtype": "fp8"},
         expected_numeric=None,
@@ -143,8 +143,8 @@ EVAL_QUESTIONS: list[EvalQuestion] = [
     # API margin
     # -----------------------------------------------------------------------
     EvalQuestion(
-        id="margin_together_8b",
-        question="At $3/hr on H100 SXM5 serving Llama-3-8B FP16, what gross margin does Together AI's $0.20/M-tokens imply?",
+        id="margin_api_8b",
+        question="At $3/hr on H100 SXM5 serving Llama-3-8B FP16, what gross margin does a $0.20/M-tokens API price imply?",
         expected_tool="api_margin",
         expected_params={"api_price_per_m_tokens": 0.20, "model": "llama-3-8b"},
         expected_numeric=None,

@@ -5,7 +5,7 @@ sees the recommendation card before touching a slider. Tuning widgets live
 in an expander — they exist, they're accessible, they don't dominate.
 
 Flow:
-    1. Preset chips (default = Nscale 70B/H100).
+    1. Preset chips (default = 70B on H100 neocloud).
     2. Headline recommendation card (cheapest option, winning multiple).
     3. Two charts side by side: $/M tokens bar + demand-stress bar.
     4. Break-even sentences in plain English.
@@ -47,7 +47,7 @@ st.title("What does it cost per million tokens?")
 page_header(
     what="Same workload costed five ways — owning, reserved, on-demand, neocloud, per-token API.",
     why="One $/M-token ruler lets you spot the cheapest option *and* the risk of being wrong about demand.",
-    start="Pick a preset below. The default is the Nscale/Nebius 70B scenario.",
+    start="Pick a preset below. The default is Llama-3-70B on 8× H100 at neocloud rates.",
     numbers="All figures are 3-year blended. Hover any badge for its source.",
 )
 
@@ -153,14 +153,14 @@ with st.expander("Tune the inputs", expanded=False):
         on_demand_h = st.number_input("On-demand", 0.5, 30.0, 4.50, 0.10,
                                       help="Pay-as-you-go hyperscaler rate.")
     with c3:
-        neocloud_h = st.number_input("Neocloud (Nscale / Nebius / Lambda)",
+        neocloud_h = st.number_input("Neocloud (independent provider)",
                                      0.5, 20.0, 2.49, 0.10,
                                      help="Specialist GPU cloud — typically cheapest.")
 
     st.markdown("**Per-token API comparison**")
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        api_name = st.text_input("Provider", "Together AI")
+        api_name = st.text_input("Provider", "Inference API")
     with c2:
         api_out = st.number_input("$/M output tokens", 0.01, 60.0, 0.88, 0.10)
     with c3:
@@ -240,7 +240,7 @@ with memo_col, st.container(border=True):
     st.caption("A 2-page markdown sizing memo — deal-desk friendly.")
     audience = st.text_input(
         "For (optional)",
-        placeholder="Nscale GTM / internal review",
+        placeholder="GTM / internal review",
         label_visibility="collapsed",
     )
     memo_md = render_memo(
@@ -301,7 +301,7 @@ with stress_col:
     # Lower = better. Highlight cheapest by base cost; show stressed cost.
     stress_colors = [
         "#C62828" if s.label in ("Owned (capex $32,000, 3y depreciation)",
-                                  "Reserved 3y cloud", "Neocloud (Lambda/Nebius/Nscale)")
+                                  "Reserved 3y cloud", "Neocloud (independent provider)")
         else "#78909C" for s in stress_rows
     ]
     fig = go.Figure(data=[

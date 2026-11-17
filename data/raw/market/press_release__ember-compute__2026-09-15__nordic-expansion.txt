@@ -1,0 +1,9 @@
+Ember Compute announces $850 million Nordic expansion, adding 95 MW of capacity
+
+[SYNTHETIC — demo corpus for AI Compute Economics Workbench; all companies, people, prices, and events are fictional]
+
+Ember Compute today announced an $850 million investment to expand its Nordic datacenter campus. The expansion will add 95 MW of IT load, bringing total Nordic capacity to 175 MW by end of 2028. Site works begin December 2026 with first racks online in Q3 2027.
+
+The site will initially host approximately 22,000 H200 SXM 141GB GPUs, with follow-on capacity reserved for Blackwell Ultra B300 GPUs once available. Ember Compute said the Nordic campus benefits from abundant geothermal baseload power and a low-latency subsea cable path to Northern Europe.
+
+Hourly instance pricing for H200 SXM at the Nordic campus will match Ember Compute's existing US-East rate card of $2.89 per GPU-hour on-demand. The company added that reserved pricing will be announced closer to go-live.

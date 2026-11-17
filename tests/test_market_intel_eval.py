@@ -39,16 +39,16 @@ def _fact(body: str, **kw) -> MarketIntelFact:
 
 
 def test_matches_same_kind_and_subject_keyword():
-    doc = _doc("Nscale committed $2.5 billion to Glasgow")
+    doc = _doc("Pulsar committed $2.5 billion to Glasgow")
     case = EvalCase(
         id="c",
         doc=doc,
-        expected=[ExpectedFact(FactKind.CAPEX, "nscale", value_num=2_500_000_000)],
+        expected=[ExpectedFact(FactKind.CAPEX, "pulsar", value_num=2_500_000_000)],
     )
     actual = [
-        _fact(doc.body, fact_kind=FactKind.CAPEX, subject="Nscale Glasgow datacenter",
+        _fact(doc.body, fact_kind=FactKind.CAPEX, subject="Pulsar Glasgow datacenter",
               value_num=2_500_000_000, value_unit="usd",
-              quote="Nscale committed $2.5 billion to Glasgow")
+              quote="Pulsar committed $2.5 billion to Glasgow")
     ]
     r = grade_case(case, actual)
     assert r.passed
@@ -57,16 +57,16 @@ def test_matches_same_kind_and_subject_keyword():
 
 
 def test_misses_on_wrong_kind():
-    doc = _doc("Nscale committed $2.5 billion to Glasgow")
+    doc = _doc("Pulsar committed $2.5 billion to Glasgow")
     case = EvalCase(
         id="c",
         doc=doc,
-        expected=[ExpectedFact(FactKind.CAPEX, "nscale")],
+        expected=[ExpectedFact(FactKind.CAPEX, "pulsar")],
     )
     actual = [
-        _fact(doc.body, fact_kind=FactKind.CAPACITY, subject="Nscale",
+        _fact(doc.body, fact_kind=FactKind.CAPACITY, subject="Pulsar",
               value_num=300, value_unit="mw",
-              quote="Nscale committed $2.5 billion to Glasgow")
+              quote="Pulsar committed $2.5 billion to Glasgow")
     ]
     r = grade_case(case, actual)
     assert not r.passed
@@ -74,7 +74,7 @@ def test_misses_on_wrong_kind():
 
 
 def test_misses_on_subject_keyword_mismatch():
-    doc = _doc("Nscale committed $2.5 billion to Glasgow")
+    doc = _doc("Pulsar committed $2.5 billion to Glasgow")
     case = EvalCase(
         id="c",
         doc=doc,
@@ -83,7 +83,7 @@ def test_misses_on_subject_keyword_mismatch():
     actual = [
         _fact(doc.body, fact_kind=FactKind.CAPEX, subject="Glasgow",
               value_num=2_500_000_000,
-              quote="Nscale committed $2.5 billion to Glasgow")
+              quote="Pulsar committed $2.5 billion to Glasgow")
     ]
     r = grade_case(case, actual)
     assert not r.passed
@@ -123,13 +123,13 @@ def test_missing_value_when_expected_fails_match():
 
 
 def test_invalid_quote_fails_case():
-    body = "Nscale committed $2.5 billion to Glasgow"
+    body = "Pulsar committed $2.5 billion to Glasgow"
     case = EvalCase(
         id="c", doc=_doc(body),
-        expected=[ExpectedFact(FactKind.CAPEX, "nscale")],
+        expected=[ExpectedFact(FactKind.CAPEX, "pulsar")],
     )
     actual = [
-        _fact(body, fact_kind=FactKind.CAPEX, subject="Nscale",
+        _fact(body, fact_kind=FactKind.CAPEX, subject="Pulsar",
               value_num=2_500_000_000,
               quote="This phrase does not appear in the body at all"),
     ]

@@ -16,8 +16,8 @@ import streamlit as st
 class Scenario:
     """One preset. Pages use the fields that matter to them and ignore the rest."""
 
-    key: str                  # stable id, e.g. "nscale_70b_h100"
-    label: str                # chip label, e.g. "Nscale 70B on H100"
+    key: str                  # stable id, e.g. "llama_70b_h100"
+    label: str                # chip label, e.g. "Llama-3-70B on 8× H100"
     description: str          # tooltip text
     gpu_id: str
     model_name: str           # "Llama-3-70B" etc., keyed to each page's model dict
@@ -28,13 +28,13 @@ class Scenario:
     util: float
 
 
-# Headline + two alternatives. Default = Nscale/Nebius neocloud angle.
-NSCALE_70B_H100 = Scenario(
-    key="nscale_70b_h100",
-    label="Nscale 70B on H100 (default)",
+# Headline + two alternatives. Default = 70B on H100 neocloud unit-economics angle.
+LLAMA_70B_H100 = Scenario(
+    key="llama_70b_h100",
+    label="Llama-3-70B on 8× H100 (default)",
     description=(
         "Llama-3-70B served on 8× H100 SXM 80GB at $2.49/GPU-hour, 60% busy. "
-        "The Nscale/Nebius neocloud unit-economics demo."
+        "The neocloud unit-economics demo."
     ),
     gpu_id="h100_sxm5_80gb",
     model_name="Llama-3-70B",
@@ -72,7 +72,7 @@ EDGE_3B_L4 = Scenario(
 )
 
 
-SCENARIOS: list[Scenario] = [NSCALE_70B_H100, MIDSIZE_8B_L40S, EDGE_3B_L4]
+SCENARIOS: list[Scenario] = [LLAMA_70B_H100, MIDSIZE_8B_L40S, EDGE_3B_L4]
 
 
 def preset_chips(

@@ -17,7 +17,7 @@ See [AI_INFRA_PROJECT.md](AI_INFRA_PROJECT.md) for the full spec; [docs/ux_revie
 - **Six pages, one story.** Every page answers a question (not an engine component). Sidebar flows Advisor → Cost tracker → What does it cost → Will it fit → How accurate → Market prices.
 - **Dual-backend AI agent.** The Advisor runs on your choice of **OpenAI gpt-4o-mini** (default) or **Claude Haiku 5.5**. Switch mid-chat. Same tools, same engine, different brain. A typical Q&A costs ~£0.0004 on gpt-4o-mini; ~£0.0002 on Haiku 5.5.
 - **Live £ cost tracker.** Every Advisor turn is logged with input / output / cached tokens, latency, and £. The dedicated **Cost tracker** page renders aggregates by model — same questions, different brains, side by side.
-- **Verbatim-quote extraction.** The **Market prices** page carries structured facts (GPU prices, capex, shipments) pulled from real press releases + transcripts — each row shows the exact source sentence. If the quote isn't literally there, the fact never gets stored.
+- **Verbatim-quote extraction.** The **Market prices** page carries structured facts (GPU prices, capex, shipments) pulled from **example press releases + transcripts** — each row shows the exact source sentence. If the quote isn't literally there, the fact never gets stored. The shipped demo corpus uses **fictional company names** so the public page carries no fabricated claims about real employers; swap in real sourced documents to produce production facts.
 - **Every number is tagged.** 🟢 measured, 🟡 modelled, 🟠 simulated, ⚪ assumption — visible on every hero metric, not buried in a footnote.
 - **The memo.** The *What does it cost* page generates a 2-page sizing memo (markdown) you can hand to a deal desk.
 

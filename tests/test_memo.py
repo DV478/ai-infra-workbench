@@ -16,7 +16,7 @@ def _scenario():
         h100, LLAMA3_8B, 8.0,
         owned_econ=econ,
         reserved_hourly=2.5, on_demand_hourly=4.5, neocloud_hourly=2.0,
-        api_name="Together AI", api_output_price_per_m=0.90, api_input_price_per_m=0.90,
+        api_name="Inference API", api_output_price_per_m=0.90, api_input_price_per_m=0.90,
     )
 
 
@@ -48,7 +48,7 @@ def test_memo_includes_all_five_options():
         scenario, gpu_name=gpu.name, gpu_id=gpu.id, dtype="fp16",
         batch_size=32, input_length=512, output_length=256, utilisation_frac=0.65,
     )
-    for label in ("Owned", "Reserved", "On-demand", "Neocloud", "Together AI"):
+    for label in ("Owned", "Reserved", "On-demand", "Neocloud", "Inference API"):
         assert label in md, f"Memo missing option label: {label!r}"
 
 

@@ -16,7 +16,7 @@ length ratio.
 
 The implied-margin helper takes an advertised API $/M-tokens figure and
 backs out the gross margin against our cost model, so the Streamlit UI can
-show "Together AI's $2.00/M for Llama-3-70B implies X% gross margin at Y%
+show "a $2.00/M API price for Llama-3-70B implies X% gross margin at Y%
 utilisation on H100 SXM5" — with every input tagged measured / modelled.
 """
 

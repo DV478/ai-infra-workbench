@@ -1,0 +1,11 @@
+Orion Labs signs $1.1 billion multi-year compute supply deal with a major hyperscaler
+
+[SYNTHETIC — demo corpus for AI Compute Economics Workbench; all companies, people, prices, and events are fictional]
+
+Orion Labs today announced the execution of a $1.1 billion three-year compute supply agreement with an unnamed major hyperscaler customer. Under the terms of the agreement, Orion Labs will deliver dedicated capacity consisting of approximately 18,000 H200 SXM GPUs and 6,000 Blackwell B200 GPUs, with delivery staggered from Q1 2027 through Q4 2029.
+
+The agreement includes volume discounts and a take-or-pay structure. Orion Labs retains the right to resell unused reserved capacity to third parties through its on-demand marketplace. An Orion Labs spokesperson said the deal represents the company's largest single-customer commitment to date.
+
+Orion Labs' current public on-demand rate for H200 SXM 141GB instances is $3.29 per GPU-hour; reserved customers under this agreement will see materially discounted rates not disclosed publicly.
+
+Orion Labs disclosed that the hyperscaler capacity will be served from two new facilities: a 65 MW site coming online in Q2 2027, and a 40 MW site online by Q4 2027.

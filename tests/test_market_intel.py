@@ -54,20 +54,20 @@ def test_detect_backend_rejects_empty():
 # ---------- Fixtures --------------------------------------------------------
 
 
-NSCALE_BODY = """Nscale announced today that it has committed $2.5 billion to build a new
+PULSAR_BODY = """Pulsar Compute announced today that it has committed $2.5 billion to build a new
 AI datacenter in Glasgow, Scotland. The facility will reach 300 MW of IT load
-by the end of 2027 and will host 50,000 Nvidia H100 SXM5 GPUs under a
-multi-year supply deal with Nvidia. Nscale said hourly on-demand pricing for
+by the end of 2027 and will host 50,000 H100 SXM5 GPUs under a
+multi-year supply deal with a major GPU vendor. Pulsar Compute said hourly on-demand pricing for
 H100 SXM5 instances starts at $2.49 per GPU-hour.
 """
 
 
-def _nscale_doc() -> MarketIntelDoc:
+def _pulsar_doc() -> MarketIntelDoc:
     return MarketIntelDoc(
         doc_type="press_release",
-        title="Nscale commits $2.5B to Glasgow AI datacenter",
-        body=NSCALE_BODY,
-        company="nscale",
+        title="Pulsar Compute commits $2.5B to Glasgow AI datacenter",
+        body=PULSAR_BODY,
+        company="pulsar",
         published_date="2026-10-14",
     )
 
@@ -99,7 +99,7 @@ def test_verify_quote_handles_whitespace():
         quote="committed $2.5 billion to build a new AI datacenter in Glasgow",
         confidence="high",
     )
-    assert fact.verify_quote_in(NSCALE_BODY) is True
+    assert fact.verify_quote_in(PULSAR_BODY) is True
 
 
 def test_verify_quote_rejects_hallucination():
@@ -110,7 +110,7 @@ def test_verify_quote_rejects_hallucination():
         quote="committed $5 billion to build a new AI datacenter in Edinburgh",
         confidence="high",
     )
-    assert fact.verify_quote_in(NSCALE_BODY) is False
+    assert fact.verify_quote_in(PULSAR_BODY) is False
 
 
 # ---------- Tool schema ----------------------------------------------------
@@ -131,7 +131,7 @@ def test_extract_facts_happy_path():
         facts=[
             {
                 "fact_kind": "capex",
-                "subject": "Nscale Glasgow datacenter",
+                "subject": "Pulsar Glasgow datacenter",
                 "value_num": 2_500_000_000,
                 "value_unit": "usd",
                 "period": "2027",
@@ -140,7 +140,7 @@ def test_extract_facts_happy_path():
             },
             {
                 "fact_kind": "capacity",
-                "subject": "Nscale Glasgow datacenter",
+                "subject": "Pulsar Glasgow datacenter",
                 "value_num": 300,
                 "value_unit": "mw",
                 "period": "2027",
@@ -152,7 +152,7 @@ def test_extract_facts_happy_path():
                 "subject": "H100 SXM5",
                 "value_num": 50_000,
                 "value_unit": "units",
-                "quote": "will host 50,000 Nvidia H100 SXM5 GPUs",
+                "quote": "will host 50,000 H100 SXM5 GPUs",
                 "confidence": "high",
             },
             {
@@ -165,12 +165,12 @@ def test_extract_facts_happy_path():
             },
         ]
     )
-    facts = extract_facts(_nscale_doc(), client)
+    facts = extract_facts(_pulsar_doc(), client)
     assert len(facts) == 4
     kinds = {f.fact_kind for f in facts}
     assert kinds == {FactKind.CAPEX, FactKind.CAPACITY, FactKind.GPU_SHIPMENT, FactKind.GPU_PRICE}
     # Company inherited from doc when LLM didn't supply one
-    assert all(f.company == "nscale" for f in facts)
+    assert all(f.company == "pulsar" for f in facts)
 
 
 def test_extract_facts_drops_unverifiable_quote():
@@ -178,7 +178,7 @@ def test_extract_facts_drops_unverifiable_quote():
         facts=[
             {
                 "fact_kind": "capex",
-                "subject": "Nscale Glasgow datacenter",
+                "subject": "Pulsar Glasgow datacenter",
                 "value_num": 5_000_000_000,
                 "value_unit": "usd",
                 "quote": "committed $5 billion to build a new fab",   # not in body
@@ -186,7 +186,7 @@ def test_extract_facts_drops_unverifiable_quote():
             },
             {
                 "fact_kind": "capacity",
-                "subject": "Nscale Glasgow datacenter",
+                "subject": "Pulsar Glasgow datacenter",
                 "value_num": 300,
                 "value_unit": "mw",
                 "quote": "The facility will reach 300 MW of IT load",
@@ -194,7 +194,7 @@ def test_extract_facts_drops_unverifiable_quote():
             },
         ]
     )
-    facts = extract_facts(_nscale_doc(), client)
+    facts = extract_facts(_pulsar_doc(), client)
     assert len(facts) == 1
     assert facts[0].value_num == 300
 
@@ -202,7 +202,7 @@ def test_extract_facts_drops_unverifiable_quote():
 def test_extract_facts_drops_malformed_rows():
     client = FakeExtractorClient(
         facts=[
-            {"fact_kind": "capex", "subject": "Nscale"},   # missing quote + confidence
+            {"fact_kind": "capex", "subject": "Pulsar"},   # missing quote + confidence
             {
                 "fact_kind": "capacity",
                 "subject": "Glasgow",
@@ -211,14 +211,14 @@ def test_extract_facts_drops_malformed_rows():
             },
         ]
     )
-    facts = extract_facts(_nscale_doc(), client)
+    facts = extract_facts(_pulsar_doc(), client)
     assert len(facts) == 1
     assert facts[0].fact_kind == FactKind.CAPACITY
 
 
 def test_extract_facts_empty_doc_returns_empty():
     client = FakeExtractorClient(facts=[])
-    assert extract_facts(_nscale_doc(), client) == []
+    assert extract_facts(_pulsar_doc(), client) == []
 
 
 def test_extract_facts_skip_verification():
@@ -232,7 +232,7 @@ def test_extract_facts_skip_verification():
             }
         ]
     )
-    facts = extract_facts(_nscale_doc(), client, require_quote_in_body=False)
+    facts = extract_facts(_pulsar_doc(), client, require_quote_in_body=False)
     assert len(facts) == 1
 
 
@@ -241,7 +241,7 @@ def test_extract_facts_skip_verification():
 
 def test_store_round_trip():
     store = MarketIntelStore()
-    doc = _nscale_doc()
+    doc = _pulsar_doc()
     store.add_doc(doc)
 
     fact = MarketIntelFact(
@@ -252,7 +252,7 @@ def test_store_round_trip():
         value_unit="usd_per_hour",
         quote="hourly on-demand pricing for H100 SXM5 instances starts at $2.49 per GPU-hour",
         confidence="high",
-        company="nscale",
+        company="pulsar",
     )
     store.add_fact(fact)
 
@@ -272,7 +272,7 @@ def test_store_round_trip():
 
 def test_store_add_doc_idempotent():
     store = MarketIntelStore()
-    doc = _nscale_doc()
+    doc = _pulsar_doc()
     store.add_doc(doc)
     store.add_doc(doc)
     rows = store._con.execute("SELECT COUNT(*) FROM docs").fetchone()
@@ -284,7 +284,7 @@ def test_store_recent_facts_newest_first():
     from datetime import UTC, datetime, timedelta
 
     store = MarketIntelStore()
-    doc = _nscale_doc()
+    doc = _pulsar_doc()
     store.add_doc(doc)
 
     t0 = datetime.now(UTC)
@@ -353,7 +353,7 @@ def test_openai_extractor_emits_facts(monkeypatch):
         response_facts=[
             {
                 "fact_kind": "capex",
-                "subject": "Nscale Glasgow",
+                "subject": "Pulsar Glasgow",
                 "value_num": 2_500_000_000,
                 "value_unit": "usd",
                 "quote": "committed $2.5 billion to build a new AI datacenter in Glasgow",
@@ -362,7 +362,7 @@ def test_openai_extractor_emits_facts(monkeypatch):
         ],
     )
     client = OpenAIExtractorClient(api_key="sk-test", model="gpt-4o-mini")
-    facts = client.emit(_nscale_doc())
+    facts = client.emit(_pulsar_doc())
     assert len(facts) == 1
     assert facts[0]["fact_kind"] == "capex"
 
@@ -390,7 +390,7 @@ def test_openai_extractor_returns_empty_when_no_tool_call(monkeypatch):
     monkeypatch.setitem(sys.modules, "openai", fake_module)
 
     client = OpenAIExtractorClient(api_key="sk-test")
-    assert client.emit(_nscale_doc()) == []
+    assert client.emit(_pulsar_doc()) == []
 
 
 def test_factory_picks_anthropic_for_sk_ant_key():
@@ -424,7 +424,7 @@ def test_factory_round_trip_with_openai_backend(monkeypatch):
         response_facts=[
             {
                 "fact_kind": "capacity",
-                "subject": "Nscale Glasgow",
+                "subject": "Pulsar Glasgow",
                 "value_num": 300,
                 "value_unit": "mw",
                 "quote": "The facility will reach 300 MW of IT load",
@@ -433,7 +433,7 @@ def test_factory_round_trip_with_openai_backend(monkeypatch):
             {
                 # Hallucinated — must be dropped by extract_facts.
                 "fact_kind": "capex",
-                "subject": "Nscale Glasgow",
+                "subject": "Pulsar Glasgow",
                 "value_num": 5_000_000_000,
                 "value_unit": "usd",
                 "quote": "committed $5 billion to a fab in Edinburgh",
@@ -444,13 +444,13 @@ def test_factory_round_trip_with_openai_backend(monkeypatch):
     client = make_extractor_client(api_key="sk-proj-test")
     assert isinstance(client, OpenAIExtractorClient)
 
-    facts = extract_facts(_nscale_doc(), client)
+    facts = extract_facts(_pulsar_doc(), client)
     assert len(facts) == 1
     assert facts[0].fact_kind == FactKind.CAPACITY
 
 
 def test_end_to_end_extract_and_persist():
-    doc = _nscale_doc()
+    doc = _pulsar_doc()
     client = FakeExtractorClient(
         callback=lambda d: [
             {
@@ -465,7 +465,7 @@ def test_end_to_end_extract_and_persist():
     )
     facts = extract_facts(doc, client)
     assert len(facts) == 1
-    assert facts[0].subject == "nscale Glasgow"
+    assert facts[0].subject == "pulsar Glasgow"
 
     store = MarketIntelStore()
     store.add_doc(doc)

@@ -7,10 +7,10 @@ tokens over a 3-year horizon:
                     straight-line over 36 months.
 * ``reserved``    : hyperscaler 3-year reserved rate.
 * ``on_demand``   : hyperscaler on-demand rate.
-* ``neocloud``    : neocloud (Lambda / CoreWeave / Nebius / Nscale) typical
-                    rate. These are quoted differently per vendor; the
+* ``neocloud``    : independent GPU cloud provider typical rate.
+                    These are quoted differently per vendor; the
                     caller passes one effective hourly $ rate and a note.
-* ``api``         : per-token API price (Together, Fireworks, OpenRouter...).
+* ``api``         : per-token API price (any serverless-inference provider).
 
 For each option, we compute:
 
@@ -467,7 +467,7 @@ def compare_options(
     )
     neocloud = rented_tco(
         "neocloud",
-        "Neocloud (Lambda/Nebius/Nscale)",
+        "Neocloud (independent provider)",
         neocloud_hourly,
         tokens_per_hour,
         busy_fraction,

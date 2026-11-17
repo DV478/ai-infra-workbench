@@ -6,7 +6,7 @@ invokes this script every Monday at 09:00 UTC.
 
 Policy (see memory/feedback_price_tracker.md):
 - APIs only where they exist (Vast.ai public search).
-- Manual entry for providers without APIs (Lambda, CoreWeave, Nebius, Nscale).
+- Manual entry for GPU-cloud providers not covered by the live APIs.
 - No HTML scraping.
 
 Usage:

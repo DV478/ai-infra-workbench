@@ -66,7 +66,7 @@ Rules:
 1. Every fact must have a ``quote`` — a verbatim snippet from the source text that supports it. If you cannot quote the source, do not emit the fact.
 2. If a number is approximate or hedged ("about", "roughly", "up to"), set confidence to "low" and keep the hedge in ``notes``.
 3. Normalise units: USD for money, usd_per_hour for rates, units for counts, mw for power, sq_ft for area.
-4. ``subject`` is the thing the fact is about ("H100 SXM5", "Nscale UK datacenter", "Blackwell"). Keep it short.
+4. ``subject`` is the thing the fact is about ("H100 SXM5", "UK datacenter site", "Blackwell"). Keep it short.
 5. ``period`` is the time window the fact applies to, when stated ("Q3-2025", "FY2026", "2027").
 6. If a doc contains no eligible facts, call emit_facts with an empty facts list. Do not invent facts.
 7. Do not extract sentiment, analyst opinions, or market commentary — only concrete numbers and commitments.

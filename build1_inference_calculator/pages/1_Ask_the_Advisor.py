@@ -180,7 +180,7 @@ if not st.session_state.history:
         "Serve Llama-3-70B at 50 rps for 3 years — rent, buy, or API?",
         "Does Llama-3-8B fit on an L40S at batch 32?",
         "At what utilisation does owning H100s beat reserved cloud?",
-        "What's the implied gross margin on the Together AI API for Llama-3-70B vs owning H100s?",
+        "What's the implied gross margin on a $0.90/M-token inference API for Llama-3-70B vs owning H100s?",
     ]
     chip_cols = st.columns(len(STARTERS))
     for col, q in zip(chip_cols, STARTERS, strict=True):
